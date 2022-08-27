@@ -16,6 +16,119 @@ import xarray as xr
 import matplotlib.pyplot as plt
 
 
+# window=60
+# correlationMap_1D_v3(members='all',
+#                   data=None, datafn='EXFvwind', datavar='EXFvwind', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 12),
+#                   detrend=True, window=window, title='Correlation map of Meridional Wind vs Dotson to Cosgrove Massloss', ymax=None, save=True, savefn='EXFvwind_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True, cumsum_map=False)
+
+
+window=60
+correlationMap_1D_v3(members='all',
+                  data=None, datafn='oceFWflx', datavar='oceFWflx', datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 12),
+                  detrend=True, window=window, title='Correlation map of Surface Freshwater Flux vs Dotson to Cosgrove Massloss', ymax=None, save=True, savefn='oceFWflx_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False,
+                  give_back=False, deseasonalize=True, cumsum_map=False)
+
+
+window=60
+correlationMap_1D_v3(members='all',
+                  data=None, datafn='oceFWflx', datavar='oceFWflx', datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 12),
+                  detrend=True, window=window, title='Correlation map of Cumulative Surface Freshwater Flux vs Dotson to Cosgrove Massloss', ymax=None, save=True, savefn='oceFWflx_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False,
+                  give_back=False, deseasonalize=True, cumsum_map=True)
+
+
+
+# window=60
+# correlationMap_1D_v3(members='all',
+#                   data=None, datafn='EXFvwind', datavar='EXFvwind', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                   detrend=True, window=window, title='Correlation map of Cumulative Meridional Wind vs Dotson to Cosgrove Massloss', ymax=None, save=True, savefn='cumEXFvwind_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True, cumsum_map=True)
+
+
+# window=60
+# correlationMap_1D_v3(members='all',
+#                   data=None, datafn='EXFuwind', datavar='EXFuwind', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                   detrend=True, window=window, title='Correlation map of Cumulative Zonal Wind vs Dotson to Cosgrove Massloss', ymax=None, save=True, savefn='cumEXFuwind_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True, cumsum_map=True)
+
+# window=60
+# correlationMap_1D_v3(members='all',
+#                   data=None, datafn='SALT_averaged_-700to-200', datavar='SALT', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                   detrend=True, window=window, title='Correlation map of Average Salinity (200-700m) vs Dotson to Cosgrove Massloss', ymax=None, save=True, savefn='SALT200to700_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True, cumsum_map=False)
+
+window=60
+correlationMap_1D_v3(members='all',
+                  data=None, datafn='SALT_averaged_-200to0', datavar='SALT', datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+                  detrend=True, window=window, title='Correlation map of Average Salinity (-200 to 0m) vs Dotson to Cosgrove Massloss', ymax=None, save=True, 
+                  savefn='SALT-200to0_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False,
+                  give_back=False, deseasonalize=True, cumsum_map=False)
+
+
+
+# window=60
+# correlationMap_1D_v3(members='all',
+#                   data=None, datafn='EXFvwind', datavar='EXFvwind', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 1),
+#                   detrend=True, window=window, title='Correlation map of Zonal Wind vs Dotson to Cosgrove Massloss', ymax=None, save=True, savefn='EXFvwind_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True)
+
+
+
+# window=60
+
+# correlationMap_2D_v3(members='all',
+#                   data=None, datafn='ADVx_TH_corrected_bottom100m_averaged', datavar='ADVx_TH', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                   detrend=True, window=window, title='2D Correlation Map of Heat Advection in Bottom 100m vs Dotson to Cosgrove Melt', ymax=-70, save=True, savefn='bottom100m_ADV_TH_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=False)
+
+
+
+# window=60
+
+# correlationMap_2D_v3(members=[0,10],
+#                   data=None, datafn='UVEL_averaged_-50to0', datavar='UVEL', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                   detrend=True, window=window, title='2D Correlation Map of Average Surface Current (top 50m) vs Dotson to Cosgrove Melt', ymax=-70, save=True, savefn='surface_VEL_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True)
+
+
+# correlationMap_2D_v3(members=[0,10],
+#                   data=None, datafn='UVEL_averaged_-50to0', datavar='UVEL', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='amundsen_shelf_break_uwind_avg', lags=range(-24, 24),
+#                   detrend=True, window=window, title='2D Correlation Map of Average Surface Current (top 50m) vs Amundsen Shelf Break Uwind', ymax=-70, save=True, savefn='surface_VEL_amundsen_shelf_break_uwind_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True)
+
 
 # for ens in range(13, 14):
 #     members=[ens-1,ens]
@@ -57,15 +170,13 @@ import matplotlib.pyplot as plt
 #                   give_back=False)
 
 # window=60
-# correlationMap_1D_v3(members='all',
+# correlationMap_1D_v3(members=[17, 20],
 #                   data=None, datafn='EXFuwind', datavar='EXFuwind', datakind='maps',
-#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(0, 24),
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 1),
 #                   detrend=True, window=window, title='Correlation map of Zonal Wind vs Dotson to Cosgrove Massloss', ymax=None, save=True, savefn='EXFuwind_dotson_to_cosgrove_'+str(window)+'month_dt',
 #                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
 #                   inverse=False,
 #                   give_back=False, deseasonalize=True)
-
-
 
 
 # correlationMap_1D_v2(members=[1,2],
@@ -110,34 +221,34 @@ import matplotlib.pyplot as plt
 #                   inverse=False,
 #                   give_back=False, deseasonalize=True)
 
-window=1
-for ens in range(16, 21):
-    members=[ens-1,ens]
-    data1=loadMITgcmData(filename='bottom100m_averaged_UVEL', members=members, kind='old')
-    data2=loadMITgcmData(filename='depth_averaged_UVEL', members=members, kind='old')
-    dataU=data1-data2
-    data1=loadMITgcmData(filename='bottom100m_averaged_VVEL', members=members, kind='old')
-    data2=loadMITgcmData(filename='depth_averaged_VVEL', members=members, kind='old')
-    dataV=data1-data2
-    data=[dataU,dataV]
+# window=1
+# for ens in range(16, 21):
+#     members=[ens-1,ens]
+#     data1=loadMITgcmData(filename='bottom100m_averaged_UVEL', members=members, kind='old')
+#     data2=loadMITgcmData(filename='depth_averaged_UVEL', members=members, kind='old')
+#     dataU=data1-data2
+#     data1=loadMITgcmData(filename='bottom100m_averaged_VVEL', members=members, kind='old')
+#     data2=loadMITgcmData(filename='depth_averaged_VVEL', members=members, kind='old')
+#     dataV=data1-data2
+#     data=[dataU,dataV]
     
-    correlationMap_2D_v3(members=members,
-                      data=data, datafn='baroclinic_UVEL', datavar='UVEL', datakind='old',
-                      ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
-                      detrend=True, window=window, title='2D Correlation Map of Baroclinic Current (lowest 100m-depth averaged) vs Dotson to Cosgrove Melt', ymax=-70, save=True, 
-                      savefn='baroclinic_VEL_dotson_to_cosgrove_'+str(window)+'month_dt',
-                      draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
-                      inverse=False,
-                      give_back=False, deseasonalize=True)
+#     correlationMap_2D_v3(members=members,
+#                       data=data, datafn='baroclinic_UVEL', datavar='UVEL', datakind='old',
+#                       ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                       detrend=True, window=window, title='2D Correlation Map of Baroclinic Current (lowest 100m-depth averaged) vs Dotson to Cosgrove Melt', ymax=-70, save=True, 
+#                       savefn='baroclinic_VEL_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                       draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                       inverse=False,
+#                       give_back=False, deseasonalize=True)
 
-    correlationMap_2D_v3(members=members,
-                          data=data,datafn='baroclinic_UVEL', datavar='UVEL', datakind='old',
-                          ind=None, indfn='timeseries_final', indvar='amundsen_shelf_break_uwind_avg', lags=range(-24, 24),
-                          detrend=True, window=window, title='2D Correlation Map of Baroclinic Current (lowest 100m-depth averaged) vs Amundsen Shelf Break Uwind', ymax=-70, save=True,
-                          savefn='baroclinic_VEL_amundsen_shelf_break_uwind_'+str(window)+'month_dt',
-                          draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
-                          inverse=False,
-                          give_back=False, deseasonalize=True)
+#     correlationMap_2D_v3(members=members,
+#                           data=data,datafn='baroclinic_UVEL', datavar='UVEL', datakind='old',
+#                           ind=None, indfn='timeseries_final', indvar='amundsen_shelf_break_uwind_avg', lags=range(-24, 24),
+#                           detrend=True, window=window, title='2D Correlation Map of Baroclinic Current (lowest 100m-depth averaged) vs Amundsen Shelf Break Uwind', ymax=-70, save=True,
+#                           savefn='baroclinic_VEL_amundsen_shelf_break_uwind_'+str(window)+'month_dt',
+#                           draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                           inverse=False,
+#                           give_back=False, deseasonalize=True)
 
 
 # correlationMap_2D_v2(members=[1,2],

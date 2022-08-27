@@ -84,6 +84,13 @@ KAN WAARSCHIJNLIJK VEEL BETER WANT DATASET HEEFT AL dyC/dyG and dxC/dxG. Dat is 
 #----------------------------------------------------------------
 
 
+#---Surface Current-------------------------------------------
+# var='UVEL'
+# readMITgcmData_depth(var, bd='/data/oceans_output/shelf/kaight/mitgcm', method='average', members='all', z0=[-50, 0], bottom=False, zbottom=100, save=True, output=False)
+
+# var='VVEL'
+# readMITgcmData_depth(var, bd='/data/oceans_output/shelf/kaight/mitgcm', method='average', members='all', z0=[-50, 0], bottom=False, zbottom=100, save=True, output=False)
+
 #---Wind Curl---------------------------------------------------
 # members='all'
 # varx='EXFuwind'
@@ -129,6 +136,29 @@ KAN WAARSCHIJNLIJK VEEL BETER WANT DATASET HEEFT AL dyC/dyG and dxC/dxG. Dat is 
 # mean=data.mean(dim='ens')
 # mean.to_netcdf('/data/hpcdata/users/grejan/mitgcm/02_data/maps/SIheff_ensmean.nc')
 #----------------------------------------------------------------
+
+
+#---SIfwfrz--------------------------------------------
+members='all'
+var='SIfwmelt'
+#READ SURFACE Snow Height
+data=readMITgcmData(var, bd='/data/oceans_output/shelf/kaight/mitgcm', members=members, save=True, filename=None)
+#----------------------------------------------------------------
+
+# #04-Make Everything Smaller (to save space)----------------------------------------------------
+makeEverythingSmaller(path='/data/hpcdata/users/grejan/mitgcm/02_data/maps/', newtype=np.float32, kind='SIfw')
+#-------------------------------------------------------------------------------------------
+
+#---SIfwfrz--------------------------------------------
+members='all'
+var='SIfwfrz'
+#READ SURFACE Snow Height
+data=readMITgcmData(var, bd='/data/oceans_output/shelf/kaight/mitgcm', members=members, save=True, filename=None)
+#----------------------------------------------------------------
+
+# #04-Make Everything Smaller (to save space)----------------------------------------------------
+makeEverythingSmaller(path='/data/hpcdata/users/grejan/mitgcm/02_data/maps/', newtype=np.float32, kind='SIfw')
+#-------------------------------------------------------------------------------------------
 
 
 #---SIhsnow--------------------------------------------
@@ -178,12 +208,20 @@ KAN WAARSCHIJNLIJK VEEL BETER WANT DATASET HEEFT AL dyC/dyG and dxC/dxG. Dat is 
 #----------------------------------------------------------------
 
 #-SALT at -5m------------------------------------------------------------------------------------------------
-members=[2,20]
-var='SALT'
-#READ SALT at -5m
-readMITgcmData(var, bd='/data/oceans_output/shelf/kaight/mitgcm', members=members, save=True, filename='Z5', at_z=-5)
+# members=[2,20]
+# var='SALT'
+# #READ SALT at -5m
+# readMITgcmData(var, bd='/data/oceans_output/shelf/kaight/mitgcm', members=members, save=True, filename='Z5', at_z=-5)
 #mean=data.mean(dim='ens')
 #mean.to_netcdf('/data/hpcdata/users/grejan/mitgcm/02_data/maps/Z195_WVEL_ensmean.nc')
+
+# var='SALT'
+# readMITgcmData_depth(var, bd='/data/oceans_output/shelf/kaight/mitgcm', method='average', members='all', z0=[-700, -200], bottom=False, zbottom=100, save=True, output=False)
+
+# var='SALT'
+# readMITgcmData_depth(var, bd='/data/oceans_output/shelf/kaight/mitgcm', method='average', members='all', 
+#                      z0=[-200, 0], bottom=False, zbottom=100, save=True, output=False)
+
 #----------------------------------------------------------------
 
 
@@ -256,6 +294,48 @@ Reading Slices:
 
 
 
-# #04-Make Everything Smaller (to save space)----------------------------------------------------
-makeEverythingSmaller(path='/data/hpcdata/users/grejan/mitgcm/02_data/maps/', newtype=np.float32, kind='SALT')
-#-------------------------------------------------------------------------------------------
+
+
+#----------------------------------------------------------------------------------------
+#%%READ TIME SERIES PAS
+# import sys
+# import os
+# sys.path.append('/data/hpcdata/users/grejan/mitgcm/') #Make sure we can also import Kaitlins code.
+# from mitgcm_python_master.postprocess import precompute_timeseries_coupled
+
+# segment_dir=[i for i in os.listdir('/data/oceans_output/shelf/kaight/mitgcm/PAS_PACE01/output') if (i[0]=='1') | (i[0]=='2')]
+# segment_dir=[i for i in segment_dir if (int(i[:4])>=1920)]
+
+# print(segment_dir)
+
+# for i in range(1,21):
+#     print('Start with member: '+str(i))
+#     precompute_timeseries_coupled (output_dir='/data/oceans_output/shelf/kaight/mitgcm/PAS_PACE{}/output'.format(str(i).zfill(2)), timeseries_file='/data/hpcdata/users/grejan/mitgcm/02_data/timeseries/timeseries_vwind_PACE{}.nc'.format(str(i).zfill(2)), 
+#                                    hovmoller_file='hovmoller.nc', file_name='output.nc', segment_dir=segment_dir, timeseries_types=['inner_amundsen_shelf_vwind_avg', 'pine_island_bay_vwind_avg'], 
+#                                    hovmoller_loc=[], key='PAS', time_average=False)
+
+#     print('Finished with member: '+str(i))
+# print('Finished with *EVERYTHING*!')
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+#%% READ TIME SERIES NEW GEOMETRY
+# import sys
+# import os
+# sys.path.append('/data/hpcdata/users/grejan/mitgcm/') #Make sure we can also import Kaitlins code.
+# from mitgcm_python_master.postprocess import precompute_timeseries_coupled
+
+# segment_dir=[i for i in os.listdir('/data/oceans_output/shelf/grejan/archer2_mitgcm_GEO/PAS_06_GEO/output') if (i[0]=='1') | (i[0]=='2')]
+# segment_dir=[i for i in segment_dir if (int(i[:4])>=1920)]
+
+# print(segment_dir)
+
+# for i in range(6,7):
+#     print('Start with member: '+str(i))
+#     precompute_timeseries_coupled (output_dir='/data/oceans_output/shelf/grejan/archer2_mitgcm_GEO/PAS_{}_GEO/output'.format(str(i).zfill(2)), timeseries_file='/data/hpcdata/users/grejan/mitgcm/02_data/timeseries/timeseries_full_GEO{}.nc'.format(str(i).zfill(2)), 
+#                                    hovmoller_file='hovmoller.nc', file_name='output.nc', segment_dir=segment_dir, timeseries_types=['amundsen_shelf_break_uwind_avg', 'all_massloss', 'dotson_to_cosgrove_massloss', 'dotson_massloss', 'pig_massloss', 'thwaites_massloss', 'cosgrove_massloss', 'amundsen_shelf_ohc_below_0m', 'amundsen_shelf_temp_btw_200_700m', 'amundsen_shelf_salt_below_0m', 'amundsen_shelf_seaice_melt', 'amundsen_shelf_seaice_freeze'], 
+#                                    hovmoller_loc=[], key='PAS', time_average=False)
+
+#     print('Finished with member: '+str(i))
+# print('Finished with *EVERYTHING*!')
+#----------------------------------------------------------------------------------------

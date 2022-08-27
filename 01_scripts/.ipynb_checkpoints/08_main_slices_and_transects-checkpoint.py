@@ -18,14 +18,110 @@ import matplotlib.colors as colors
 
 divnorm = colors.TwoSlopeNorm(vcenter=0)
 
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 18})
 
 from functions.loading_and_processing_data import loadMITgcmData, detrend_and_average_MITgcmData, read_all_data
 from functions.composite_maps import createCompositeMap, createVelocityCompositeMap, defineEvents, findEvents
 
+#%--------COMPARE DIFFERENT TIMES-------------------------------------------------------------------------------
 
+members=[18,19]
 #01 MAKE CROSS SECTIONS A LA ALESSANDRO
 lon=123
+
+dataS=loadMITgcmData(filename='SALT_W'+str(lon), members=members, kind='slices')
+dataT=loadMITgcmData(filename='THETA_W'+str(lon), members=members, kind='slices')
+
+#Convert everything to density.
+import sys
+sys.path.append('/data/hpcdata/users/grejan/mitgcm/') #Make sure we can also import Kaitlins code.
+from mitgcm_python_master.diagnostics import density
+ref_depth=0
+eosType='MDJWF'
+dataS=dataS.where(dataS!=0, drop=True)
+dataT=dataT.where(dataT!=0, drop=True)
+
+salt=dataS['SALT'].to_numpy()
+temp=dataT['THETA'].to_numpy()
+q=density (eosType, salt, temp, press=ref_depth)
+q=xr.DataArray(q, dims=('ens', 'time', "Z", "YC"), coords={'ens': dataS['SALT'].ens, 'time': dataS['SALT'].time, "YC": dataS['SALT'].YC, "Z": dataS['SALT'].Z})
+
+
+fig=plt.figure(figsize=(20,10))
+fig.suptitle('Longitudinal cross sections of density in member '+str(members[-1])+' across shelf break at '+str(lon)+' degrees W')
+ax=plt.subplot(2,2,1)
+ax.set_title('Mean over 1920-1950')
+img=ax.pcolor(q.YC, q.Z, q.mean(dim='ens').sel(time=slice('1920', '1950')).mean(dim='time')-1027, cmap='seismic', vmin=0.4)
+cn=ax.contour(q.YC, q.Z, q.mean(dim='ens').sel(time=slice('1920', '1950')).mean(dim='time'), [1027.5, 1027.6, 1027.7, 1027.8], colors='k')
+#ax.clabel(cn, [1027.5, 1027.6, 1027.7, 1027.8])
+plt.colorbar(img, label='Density - 1027 [kg/m3]', extend='min')
+if lon==115:
+    ax.set_xlim([-71.8, -71.1])
+elif lon==123:
+    ax.set_xlim([-73, -72])
+ax.set_ylim([-2500, 0])
+ax.set_ylabel('Depth [m]')
+ax.set_xlabel('Latitude [degree N]')
+ax.set_facecolor('grey')
+
+ax=plt.subplot(2,2,2)
+ax.set_title('Mean over 1980-2010')
+img=ax.pcolor(q.YC, q.Z, q.mean(dim='ens').sel(time=slice('1980', '2010')).mean(dim='time')-1027, cmap='seismic', vmin=0.4)
+cn=ax.contour(q.YC, q.Z, q.mean(dim='ens').sel(time=slice('1980', '2010')).mean(dim='time'), [1027.5, 1027.6, 1027.7, 1027.8], colors='k')
+#ax.clabel(cn, [1027.5, 1027.6, 1027.7, 1027.8])
+plt.colorbar(img, label='Density - 1027 [kg/m3]', extend='min')
+if lon==115:
+    ax.set_xlim([-71.8, -71.1])
+elif lon==123:
+    ax.set_xlim([-73, -72])
+ax.set_ylim([-2500, 0])
+ax.set_ylabel('Depth [m]')
+ax.set_xlabel('Latitude [degree N]')
+ax.set_facecolor('grey')
+
+
+ax=plt.subplot(2,2,3)
+ax.set_title('Difference Mean1980to2010 - Mean1920to1950')
+img=ax.pcolor(q.YC, q.Z, q.mean(dim='ens').sel(time=slice('1980', '2010')).mean(dim='time')-q.mean(dim='ens').sel(time=slice('1920', '1950')).mean(dim='time'), cmap='seismic', vmin=-0.08, vmax=0.08)
+#cn=ax.contour(q.YC, q.Z, q.mean(dim='ens').sel(time=slice('1980', '2010')).mean(dim='time'), [1027.5, 1027.6, 1027.7, 1027.8], colors='k')
+#ax.clabel(cn, [1027.5, 1027.6, 1027.7, 1027.8])
+plt.colorbar(img)
+if lon==115:
+    ax.set_xlim([-71.8, -71.1])
+elif lon==123:
+    ax.set_xlim([-73, -72])
+ax.set_ylim([-2500, 0])
+ax.set_ylabel('Depth [m]')
+ax.set_xlabel('Latitude [degree N]')
+ax.set_facecolor('grey')
+
+ax=plt.subplot(2,2,4)
+ax.set_title('Trend 1920-2013')
+img=ax.pcolor(q.YC, q.Z, q.sel(time=slice('1920', '2010')).polyfit(dim='time', deg=1).sel(degree=1, ens=0)['polyfit_coefficients'], cmap='seismic', vmin=-1e-20, vmax=1e-20)
+#cn=ax.contour(q.YC, q.Z, q.mean(dim='ens').sel(time=slice('1980', '2010')).mean(dim='time'), [1027.5, 1027.6, 1027.7, 1027.8], colors='k')
+#ax.clabel(cn, [1027.5, 1027.6, 1027.7, 1027.8])
+plt.colorbar(img)
+if lon==115:
+    ax.set_xlim([-71.8, -71.1])
+elif lon==123:
+    ax.set_xlim([-73, -72])
+ax.set_ylim([-2500, 0])
+ax.set_ylabel('Depth [m]')
+ax.set_xlabel('Latitude [degree N]')
+ax.set_facecolor('grey')
+
+
+fig.subplots_adjust(hspace=0.4, wspace=0.4)
+
+fig.savefig('/data/hpcdata/users/grejan/mitgcm/03_output/slices/RHO_slicesintime_member'+str(members[-1])+'_at_lon'+str(lon)+'.png')
+
+
+
+
+#%--------COMPARE DIFFERENT MEMBERS-------------------------------------------------------------------------------
+
+#01 MAKE CROSS SECTIONS A LA ALESSANDRO
+lon=115
 
 dataS=loadMITgcmData(filename='SALT_W'+str(lon), members='all', kind='slices')
 dataT=loadMITgcmData(filename='THETA_W'+str(lon), members='all', kind='slices')

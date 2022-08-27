@@ -845,8 +845,9 @@ def createCompositeMap_2(data, selected, title='Composite map',
     print('Finished!')
     return
 
-def workflowCompositeMap(input_filename, var, members, deseasonalize, output_filename='', title='', window=1):
-
+def workflowCompositeMap(input_filename, var, members, deseasonalize, selected, output_filename='', title='', window=1):
+    
+    from functions.loading_and_processing_data import loadMITgcmData, detrend_and_average_MITgcmData, read_all_data
     #Loading the data.
     data=loadMITgcmData(filename=input_filename, members=members)
 
@@ -854,7 +855,7 @@ def workflowCompositeMap(input_filename, var, members, deseasonalize, output_fil
     data_dt=detrend_and_average_MITgcmData(data, var, window=window)
     if deseasonalize==True:
              data_dt = data_dt.groupby("time.month")-data_dt.groupby("time.month").mean(dim="time")
-    createCompositeMap(data_dt, selected, title=title, 
+    createCompositeMap_2(data_dt, selected, title=title, 
                        filename=output_filename,
-                       window=window)
+                       window=window, members=members)
     return

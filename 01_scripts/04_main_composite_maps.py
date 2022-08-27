@@ -24,31 +24,47 @@ total, units, longnames=read_all_data(full, total, units, longnames, kind='final
 total, units, longnames=read_all_data(full, total, units, longnames, kind='ohc')
 
 #Select events that we are interested in.
-threshold=defineEvents(total=total, longnames=longnames, units=units, wvar='amundsen_shelf_ohc_below_0m', larger_than=True, pct=75, detrend=True, window=12*2, filename='warm75_colored_in')
+threshold=defineEvents(total=total, longnames=longnames, units=units, wvar='dotson_to_cosgrove_massloss', larger_than=True, pct=75, detrend=True, window=12*2, filename='melt75_colored_in')
 print(threshold)
-selected,_=findEvents(total=total, longnames=longnames, units=units, threshold=threshold, wvar='amundsen_shelf_ohc_below_0m', larger_than=True, detrend=True, window=12*2, filename='warm75_colored_in')
+selected,_=findEvents(total=total, longnames=longnames, units=units, threshold=threshold, wvar='dotson_to_cosgrove_massloss', larger_than=True, detrend=True, window=12*2, filename='melt75_colored_in')
 
-#Select events that we are interested in.
-threshold=defineEvents(total=total, longnames=longnames, units=units, wvar='amundsen_shelf_ohc_below_0m', larger_than=False, pct=25, detrend=True, window=12*2, filename='cold25_colored_in')
-print(threshold)
-selected2,_=findEvents(total=total, longnames=longnames, units=units, threshold=threshold, wvar='amundsen_shelf_ohc_below_0m', larger_than=False, detrend=True, window=12*2, filename='cold25_colored_in')
+# #Select events that we are interested in.
+# threshold=defineEvents(total=total, longnames=longnames, units=units, wvar='amundsen_shelf_ohc_below_0m', larger_than=False, pct=25, detrend=True, window=12*2, filename='cold25_colored_in')
+# print(threshold)
+# selected2,_=findEvents(total=total, longnames=longnames, units=units, threshold=threshold, wvar='amundsen_shelf_ohc_below_0m', larger_than=False, detrend=True, window=12*2, filename='cold25_colored_in')
 
 #01-Normal-Composite-Map-------------------------------------------------------------------
 
-# # #%% INITIALISATION
-# # members='all' #[0,1]
-# # var='THETA'
-# # input_filename='THETA_depth_integrated'
-# # output_filename='test_theta_depth_integrated_warm'
-# # title='Depth Integrated THETA during warm periods'
-# # window=1
-# # larger_than=True
-# # deseasonalize=True
-# # pct=75
-# # workflowCompositeMap(input_filename=input_filename, var=var, 
-# #                      members=members, deseasonalize=deseasonalize, output_filename=output_filename, 
-# #                      title=title, window=window)
+#selected=selected[['ens01', 'ens02', 'ens03']]
 
+#%% INITIALISATION
+members='all' #[0,1]
+var='SALT'
+input_filename='SALT_averaged_-700to-200'
+output_filename='test_SALT_-700to-200_highmelt'
+title='SALT (averaged between 700 and 200m) during high melt event'
+window=1
+larger_than=True
+deseasonalize=True
+pct=75
+workflowCompositeMap(input_filename=input_filename, var=var, 
+                     members=members, deseasonalize=deseasonalize, output_filename=output_filename, 
+                     title=title, window=window, selected=selected)
+
+
+
+members=[0,3] #[0,1]
+var='oceFWflx'
+input_filename='oceFWflx'
+output_filename='test_oceFWflx_highmelt'
+title='oceFWflx during high melt event'
+window=12
+larger_than=True
+deseasonalize=True
+pct=75
+workflowCompositeMap(input_filename=input_filename, var=var, 
+                     members=members, deseasonalize=deseasonalize, output_filename=output_filename, 
+                     title=title, window=window, selected=selected)
 
 #02-Overview-Composites------------------------------------------------
 

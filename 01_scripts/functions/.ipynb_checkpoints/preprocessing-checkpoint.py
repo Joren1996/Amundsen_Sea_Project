@@ -45,17 +45,21 @@ def readMITgcmData(var, bd='/data/oceans_output/shelf/kaight/mitgcm', members='a
     else:
         pdir=[os.path.join(bd, f) for f in os.listdir(bd) if ('PAS_PACE' in f) & ('hb' not in f)][members[0]:members[-1]]
         number=members[-1]-members[0]
-        
-    files=[os.path.join('output', f, 'MITgcm/output.nc') for f in os.listdir('/data/oceans_output/shelf/kaight/mitgcm/PAS_PACE01/output') if (f[0]==str(1)) | (f[0]==str(2))]
+    
+    if 'SI' in var:
+        files=[os.path.join('output', f, 'MITgcm/output.nc') for f in os.listdir('/data/oceans_output/shelf/kaight/mitgcm/PAS_PACE01/output') if ((f[0]==str(1)) & (f[1]!=str(8)) & (f[2]!=str(0)) & (f[2]!=str(1))) | (f[0]==str(2))]
+    else:
+        files=[os.path.join('output', f, 'MITgcm/output.nc') for f in os.listdir('/data/oceans_output/shelf/kaight/mitgcm/PAS_PACE01/output') if (f[0]==str(1)) | (f[0]==str(2))]
     
     #Reading the actual data.
     data=None
 
     for i, p in enumerate(pdir):
-        print(p)
+
         fd=[os.path.join(p, f) for f in files]
         fd.sort()
         b=xr.open_dataset(fd[0]) #Read the first year
+        print(b)
         b=b[[var]] #Select the variable of interest
         
         if at_z!=False:
@@ -286,7 +290,7 @@ def readMITgcmData_depth(var, bd='/data/oceans_output/shelf/kaight/mitgcm', meth
                     if type(z0)==type(None):
                         b.to_netcdf('../02_data/maps/'+var+'_depth_averaged_ens'+str(i+1)+'.nc')
                     else:
-                        b.to_netcdf('../02_data/maps/'+var+'_averaged_'+str(z0[0])+'-'+str(z0[-1])+'_ens'+str(i+1)+'.nc')
+                        b.to_netcdf('../02_data/maps/'+var+'_averaged_'+str(z0[0])+'to'+str(z0[-1])+'_ens'+str(i+1)+'.nc')
             elif method=='integrate':
                 if bottom==True:
                     b.to_netcdf('../02_data/maps/'+var+'_bottom100m_integrated_ens'+str(i+1)+'.nc')
@@ -294,7 +298,7 @@ def readMITgcmData_depth(var, bd='/data/oceans_output/shelf/kaight/mitgcm', meth
                     if type(z0)==type(None):
                         b.to_netcdf('../02_data/maps/'+var+'_depth_integrated_ens'+str(i+1)+'.nc')
                     else:
-                        b.to_netcdf('../02_data/maps/'+var+'_integrated_'+str(z0[0])+'-'+str(z0[-1])+'_ens'+str(i+1)+'.nc')
+                        b.to_netcdf('../02_data/maps/'+var+'_integrated_'+str(z0[0])+'to'+str(z0[-1])+'_ens'+str(i+1)+'.nc')
         if output==True:
             if i==0:
                 data=b
