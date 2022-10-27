@@ -21,9 +21,11 @@ sys.path.append('/data/hpcdata/users/grejan/mitgcm/') #Make sure we can also imp
 
 def loadMITgcmData(filename='zonal_winds', members='all', kind='maps'):
     '''
+    Reading presaved map data.
+    
     INPUT:
     filename (string): name of the file that has to be loaded. This should be followed by '_ensXX'.
-    members (string or list): members to read ('all' or list with boundaries (e.g. [0, 1] for member 1)).
+    members (string or list): members to read ('all' or list with members to be read.
     kind: which subfolder we want to use
     
     RETURN:
@@ -31,8 +33,10 @@ def loadMITgcmData(filename='zonal_winds', members='all', kind='maps'):
     '''
     if members=='all':
         ens_list=np.arange(20)
+    elif len(members)!=1:
+        ens_list=np.asarray(members)-1
     else:
-        ens_list=np.arange(members[0], members[-1])
+        ens_list=np.arange(members[0]-1, members[0])
         
     for j,i in enumerate(ens_list):
         print('Loading number:'+str(i))
@@ -60,11 +64,13 @@ def loadMITgcmData(filename='zonal_winds', members='all', kind='maps'):
 
 
 
-def loadTimeSeriesData(filename='timeseries_final', members='all', kind='old'):
+def loadTimeSeriesData(filename='timeseries_final', members='all', kind='old', PACE=True):
     '''
+    Read time series data.
+    
     INPUT:
     filename (string): name of the file that has to be loaded. This should be followed by '_ensXX'.
-    members (string or list): members to read ('all' or list with boundaries (e.g. [0, 1] for member s1)).
+    members (string or list): members to read ('all' or list with members to be read).
     kind: which subfolder we want to use
     
     RETURN:
@@ -72,8 +78,11 @@ def loadTimeSeriesData(filename='timeseries_final', members='all', kind='old'):
     '''
     if members=='all':
         ens_list=np.arange(20)
+    elif len(members)!=1:
+        ens_list=np.asarray(members)-1
     else:
-        ens_list=np.arange(members[0], members[-1])
+        ens_list=np.arange(members[0]-1, members[0])
+    
         
     for j,i in enumerate(ens_list):
         print('Loading number:'+str(i))
@@ -81,12 +90,12 @@ def loadTimeSeriesData(filename='timeseries_final', members='all', kind='old'):
             print('../data/'+filename+'_PACE'+str(i+1).zfill(2)+'.nc')
             a=xr.open_dataset('../data/'+filename+'_PACE'+str(i+1).zfill(2)+'.nc')
         else:
-            try:
+            if PACE==True:
                 print('../02_data/'+kind+'/'+filename+'_PACE'+str(i+1).zfill(2)+'.nc')
                 a=xr.open_dataset('../02_data/'+kind+'/'+filename+'_PACE'+str(i+1).zfill(2)+'.nc')
-            except:
-                print('../02_data/'+kind+'/'+filename+'_ens'+str(i+1).zfill(2)+'.nc')
-                a=xr.open_dataset('../02_data/'+kind+'/'+filename+'_PACE'+str(i+1).zfill(2)+'.nc')
+            else:
+                print('../02_data/'+kind+'/'+filename+'_GEO'+str(i+1).zfill(2)+'.nc')
+                a=xr.open_dataset('../02_data/'+kind+'/'+filename+'_GEO'+str(i+1).zfill(2)+'.nc')
         if j==0:
             data=a
         else:
@@ -98,21 +107,22 @@ def loadTimeSeriesData(filename='timeseries_final', members='all', kind='old'):
     return data
 
 
-
-
 def loadPACEData(var='PSL', members='all'):
     '''
     INPUT:
+    var (string): variable to be read (only PSL and SST as of now)
     filename (string): name of the variable that has to be loaded. This should be followed by '_ensXX'.
-    members (string or list): members to read ('all' or list with boundaries (e.g. [0, 1] for member 1)).
+    members (string or list): members to read ('all' or members to be read).
     
     RETURN:
     data (xr.Dataset): dataset containing the variable of interest and the ensemble members along dimension 'ens'.
     '''
     if members=='all':
         ens_list=np.arange(20)
+    elif len(members)!=1:
+        ens_list=np.asarray(members)-1
     else:
-        ens_list=np.arange(members[0], members[-1])
+        ens_list=np.arange(members[0]-1, members[0])
         
     for j,i in enumerate(ens_list):
         print('Loading number:'+str(i))
@@ -144,7 +154,10 @@ def loadPACEData(var='PSL', members='all'):
 
 def detrend_and_average_MITgcmData(data, var, window=24, method='mean', start='1920', end='2013', longwindow=12*25, min_periods=5*12):
     '''
-    data: (xarray dataset)
+    Detrend and average the data.
+
+    INPUT:
+    data: (xarray dataset): original data
     var: variable name (string)
     window: rolling mean window [months] (int)
     method: mean, linear or quadratic (string)
@@ -154,6 +167,9 @@ def detrend_and_average_MITgcmData(data, var, window=24, method='mean', start='1
                 only during mean detrending[months] (int)
     min_periods: minimum number of datapoints for rolling mean window for detrending
                  only during mean detrending[months] (int)
+                 
+    OUTPUT:
+    data: (xarray dataset): detrended data
     '''
 
 
@@ -189,65 +205,66 @@ def detrend_and_average_MITgcmData(data, var, window=24, method='mean', start='1
     return data
 
 
-def read_all_data(full, total, units, longnames, kind):
-    file_paths=[os.path.join(full, file) for file in os.listdir(full) if kind in file]
+# def read_all_data(full, total, units, longnames, kind):
+#     file_paths=[os.path.join(full, file) for file in os.listdir(full) if kind in file]
     
-    if kind!='trough':    
-        names=['ens'+str(file[-5:-3]) for file in file_paths]
+#     if kind!='trough':    
+#         names=['ens'+str(file[-5:-3]) for file in file_paths]
 
-        #print(file_paths)
-        varlist=list(xr.open_dataset(file_paths[1]).variables)
+#         #print(file_paths)
+#         varlist=list(xr.open_dataset(file_paths[1]).variables)
 
-        for var in varlist:
-            total[var]=pd.DataFrame()    
-        for i, file in enumerate(file_paths):
-            data=xr.open_dataset(file)
+#         for var in varlist:
+#             total[var]=pd.DataFrame()    
+#         for i, file in enumerate(file_paths):
+#             data=xr.open_dataset(file)
 
-            timeind=netcdf_time(file, monthly=False)
+#             timeind=netcdf_time(file, monthly=False)
 
-            for var in varlist:
-                total[var][names[i]]=pd.Series(data[var], index=timeind)
-                if (i==0) & (var!='time'):
-                    units[var]=data[var].units
-                    longnames[var]=data[var].long_name
+#             for var in varlist:
+#                 total[var][names[i]]=pd.Series(data[var], index=timeind)
+#                 if (i==0) & (var!='time'):
+#                     units[var]=data[var].units
+#                     longnames[var]=data[var].long_name
     
-    else:
-        varlist=['PITE', 'Burke', 'Dotson', 'BRE', 'BRW']
-        for var in varlist:
-            ts=xr.open_dataarray('./data/'+var+'_depth_averaged_vflow.nc')
-            ts=ts.drop('YG')
-            names=['ens'+str(i+1).zfill(2) for i in ts.ens.values]
-            total[var]=pd.DataFrame(data=ts.values.T, columns=names, index=ts.indexes['time'].to_datetimeindex())
-            units[var]='[m/s]'
-            longnames[var]='Depth Averaged Meridional Flow through Cross Section of '+var
+#     else:
+#         varlist=['PITE', 'Burke', 'Dotson', 'BRE', 'BRW']
+#         for var in varlist:
+#             ts=xr.open_dataarray('./data/'+var+'_depth_averaged_vflow.nc')
+#             ts=ts.drop('YG')
+#             names=['ens'+str(i+1).zfill(2) for i in ts.ens.values]
+#             total[var]=pd.DataFrame(data=ts.values.T, columns=names, index=ts.indexes['time'].to_datetimeindex())
+#             units[var]='[m/s]'
+#             longnames[var]='Depth Averaged Meridional Flow through Cross Section of '+var
             
-            varb=var+'B'
-            ts=xr.open_dataarray('./data/'+var+'_bottom100m_vflow.nc')
-            ts=ts.drop('YG')
-            names=['ens'+str(i+1).zfill(2) for i in ts.ens.values]
-            total[varb]=pd.DataFrame(data=ts.values.T, columns=names, index=ts.indexes['time'].to_datetimeindex())
-            units[varb]='[m/s]'
-            longnames[varb]='Bottom 100m Meridional Flow (depth averaged flow subtracted) through Cross Section of '+var
+#             varb=var+'B'
+#             ts=xr.open_dataarray('./data/'+var+'_bottom100m_vflow.nc')
+#             ts=ts.drop('YG')
+#             names=['ens'+str(i+1).zfill(2) for i in ts.ens.values]
+#             total[varb]=pd.DataFrame(data=ts.values.T, columns=names, index=ts.indexes['time'].to_datetimeindex())
+#             units[varb]='[m/s]'
+#             longnames[varb]='Bottom 100m Meridional Flow (depth averaged flow subtracted) through Cross Section of '+var
             
-            varb=var+'_full'
-            ts=xr.open_dataarray('./data/'+var+'_depth_averaged_vflow_full.nc')
-            ts=ts.drop('YG')
-            names=['ens'+str(i+1).zfill(2) for i in ts.ens.values]
-            total[varb]=pd.DataFrame(data=ts.values.T, columns=names, index=ts.indexes['time'].to_datetimeindex())
-            units[varb]='[m/s]'
-            longnames[varb]='Depth Averaged Meridional Flow through Cross Section of '+var+' (Not Detrended)'
+#             varb=var+'_full'
+#             ts=xr.open_dataarray('./data/'+var+'_depth_averaged_vflow_full.nc')
+#             ts=ts.drop('YG')
+#             names=['ens'+str(i+1).zfill(2) for i in ts.ens.values]
+#             total[varb]=pd.DataFrame(data=ts.values.T, columns=names, index=ts.indexes['time'].to_datetimeindex())
+#             units[varb]='[m/s]'
+#             longnames[varb]='Depth Averaged Meridional Flow through Cross Section of '+var+' (Not Detrended)'
             
-            varb=var+'B_full'
-            ts=xr.open_dataarray('./data/'+var+'_bottom100m_vflow_full.nc')
-            ts=ts.drop('YG')
-            names=['ens'+str(i+1).zfill(2) for i in ts.ens.values]
-            total[varb]=pd.DataFrame(data=ts.values.T, columns=names, index=ts.indexes['time'].to_datetimeindex())
-            units[varb]='[m/s]'
-            longnames[varb]='Bottom 100m Meridional Flow (depth averaged flow subtracted) through Cross Section of '+var
+#             varb=var+'B_full'
+#             ts=xr.open_dataarray('./data/'+var+'_bottom100m_vflow_full.nc')
+#             ts=ts.drop('YG')
+#             names=['ens'+str(i+1).zfill(2) for i in ts.ens.values]
+#             total[varb]=pd.DataFrame(data=ts.values.T, columns=names, index=ts.indexes['time'].to_datetimeindex())
+#             units[varb]='[m/s]'
+#             longnames[varb]='Bottom 100m Meridional Flow (depth averaged flow subtracted) through Cross Section of '+var
             
             
-    return total, units, longnames
+#     return total, units, longnames
 
+#This is one of Kaitlin's files.
 def netcdf_time (file_path, var_name='time', t_start=None, t_end=None, return_date=True, monthly=True, return_units=False):
 
     import netCDF4 as nc
@@ -301,6 +318,20 @@ def netcdf_time (file_path, var_name='time', t_start=None, t_end=None, return_da
     
     
 def smoothDataset(data, var, x=21, y=21, which_area='rA'):
+    '''
+    Smooth data with running mean.
+    
+    INPUT:
+    data (xr.DataArray): data to be smoothed
+    var (string): variable of interest
+    x (int): number of cells for running mean (x direction)
+    y (int): number of cells for running mean (y direction)
+    which_area (string): which area variable to use (rA or rAz)
+    
+    OUTPUT:
+    data (xr.DataSet): smoothed data
+    
+    '''
     import xarray as xr
     data=data.where(data.sel(time=data.time[-30])!=0, drop=True)
     ra=xr.open_dataarray('/data/hpcdata/users/grejan/mitgcm/02_data/coordinates/'+which_area+'.nc')
@@ -312,9 +343,106 @@ def smoothDataset(data, var, x=21, y=21, which_area='rA'):
 
 
 def createMapIndex(data, var, xlim, ylim, which_area='rA'):
+    '''
+    Create an mean index for specific area (weighted by the area)
+    
+    INPUT:
+    data (xr.DataArray): data that contains area of interest
+    var (string): variable of interest
+    xlim (list): longitudinal limits of area (2 values)
+    ylim (list): latitudinal limits of area (2 values)
+    which_area (string): which area variable to use (rA or rAz)
+    
+    OUTPUT:
+    data (xr.DataArray): time series with mean over specific area
+    
+    '''
     ra=xr.open_dataarray('/data/hpcdata/users/grejan/mitgcm/02_data/coordinates/'+which_area+'.nc')
     if which_area=='rA':
         data=(data*ra).sel(XC=slice(xlim[0], xlim[1]), YC=slice(ylim[0], ylim[1])).sum(dim=['XC', 'YC'])/ra.sel(XC=slice(xlim[0], xlim[1]), YC=slice(ylim[0], ylim[1])).sum()
     elif which_area=='rAz':
             data=(data*ra).sel(XG=slice(xlim[0], xlim[1]), YG=slice(ylim[0], ylim[1])).sum(dim=['XG', 'YG'])/ra.sel(XG=slice(xlim[0], xlim[1]), YG=slice(ylim[0], ylim[1])).sum()
     return data
+
+def computeEnsMean(name, members, kind, save):
+    '''
+    Compute Ensemble mean
+    
+    INPUT:
+    name (string): variable name
+    members (string or list): as in loadMITgcmData (e.g.'all' or [3,4])
+    kind (string): as in loadMITgcmData
+    save (boolean): whether to save the new ensemble mean.
+    
+    OUTPUT:
+    ensmean (xr.Dataset): ensemble mean
+    
+    '''
+    data=loadMITgcmData(name, members, kind)
+    ensmean=data.mean(dim='ens')
+    if save==True:
+        ensmean.to_netcdf('./02_data/'+kind+'/'+name+'_ensmean.nc')
+    return ensmean
+
+
+
+def interpolateSST(SST, xgrid, ygrid, time, ens_list, plot=False):
+    '''
+    Interpolate the SST on rectangular grid.
+    
+    INPUT:
+    SST (xr.DataArray): SST to be gridded.
+    xgrid (list): grid cells in x direction (deg longitude)
+    ygrid (list): grid cells in x direction (deg latitude)
+    time (list): list with time index
+    ens_list (list): list with ensemble members
+    plot (bool): whether to plot or not
+    
+    OUTPUT:
+    SST_new (xr.DataArray): the newly gridded data.
+    
+    '''
+    
+    from scipy.interpolate import griddata
+    
+    # data coordinates and values
+    x = SST.sel(ens=0).ULONG.to_numpy().flatten()
+    y = SST.sel(ens=0).ULAT.to_numpy().flatten()
+    
+    # target grid to interpolate to
+    xi,yi = np.meshgrid(xgrid,ygrid)
+    
+    zfinal=np.zeros((len(time), np.shape(xi)[0], np.shape(xi)[1],))
+    #Perform this for every time step...
+    for j in ens_list:
+        print('Start with Member: '+str(j))
+        for i in range(len(time)):
+            print('Time step: '+str(i)+'; Member: '+str(j))
+            z = SST.isel(ens=j, time=i).to_numpy().flatten()
+            # interpolate
+            zfinal[i,:,:] = griddata((x,y),z,(xi,yi),method='linear')
+    
+    if plot==True:
+        # plot
+        fig = plt.figure()
+        ax = fig.add_subplot(211)
+        plt.pcolor(xi,yi,zi, cmap='seismic',  vmin=-0.4, vmax=0.4)
+        plt.xlabel('xi',fontsize=16)
+        plt.ylabel('yi',fontsize=16)
+
+        ax = fig.add_subplot(212)
+        img=ax.scatter(SST_dt.ULONG.to_numpy().flatten(), SST_dt.ULAT.to_numpy().flatten(), s=0.3,
+                              c=SST_dt.isel(ens=0, time=0, z_t=0).to_numpy().flatten(), 
+                              cmap='seismic',  vmin=-0.4, vmax=0.4)
+        plt.xlabel('xi',fontsize=16)
+        plt.ylabel('yi',fontsize=16)
+
+    #Create dataarray
+    SST_new=xr.DataArray(data=zfinal,
+                        dims=['time', 'lat', 'lon'],
+                        coords=dict(
+                        lon=xgrid,
+                        lat=ygrid,
+                        time=time)                        
+                        )
+    return SST_new
