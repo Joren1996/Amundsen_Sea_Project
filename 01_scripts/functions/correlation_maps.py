@@ -23,13 +23,14 @@ import string
 from .loading_and_processing_data import loadMITgcmData, loadPACEData, detrend_and_average_MITgcmData, loadTimeSeriesData
 sys.path.append('/data/hpcdata/users/grejan/mitgcm/') #Make sure we can also import Kaitlins code.
 from mitgcm_python_master.grid import ERA5Grid, PACEGrid, Grid, dA_from_latlon, pierre_obs_grid
-
+from mitgcm_python_master.plot_utils.labels import latlon_axes
 
 def correlationMap_1D_v3(members='all',
                       data=None, datafn='new2_amundsen_shelf_temp_200to700', datavar='THETA', datakind='old',
                       ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
                       mask='land', years=['1920', '2013'],
-                      detrend=True, deseasonalize=True, window=24, title='2D Correlation Map', ymax=-70, save=False, savefn='test',
+                      detrend=True, deseasonalize=True, window=24, title='2D Correlation Map', ymax=-70, save=False,
+                      savefn='test',
                       draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
                       inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False):
     '''
@@ -73,15 +74,25 @@ def correlationMap_1D_v3(members='all',
         members=[0,20]
     
     #Save original data
-    data_og=data
-    ind_og=ind
+    if type(ind)!=type(None):
+        ind_og=ind.copy()
+    else:
+        ind_og=None
+    if type(data)!=type(None):
+        data_og=data.copy()
+    else:
+        data_og=None
+    #data_og=data_og.rename({'ens':'ens1'})
+    #ind_og=ind_og.rename({'ens':'ens1'})
     
     #Loop over ensemble members!
     for ens in range(members[0]+1,members[-1]+1):
         #First, we read the data!
         if type(data_og)==type(None):
-                print('...Reading: /data/hpcdata/users/grejan/mitgcm/02_data/'+datakind+'/'+datafn+'_....')
-                data=loadMITgcmData(filename=datafn, members=[ens], kind=datakind)
+            print('...Reading: /data/hpcdata/users/grejan/mitgcm/02_data/'+datakind+'/'+datafn+'_....')
+            data=loadMITgcmData(filename=datafn, members=[ens], kind=datakind)
+        else:
+            data=data_og.sel(ens=[ens-1])
         
         #Interpolate everything to the center of the cell.
         print('...Making sure interpolate everything to the center of the cells')
@@ -118,7 +129,11 @@ def correlationMap_1D_v3(members='all',
         if type(ind_og)==type(None):
             print('...Reading: '+indfn)
             if 'timeseries' in indfn:
-                if ('final' in indfn) or ('forcing' in indfn):
+                if 'GEO' in datafn:
+                    ind=loadTimeSeriesData(filename=indfn, members=[ens], kind='timeseries', PACE=False)
+                    _, index = np.unique(ind['time'], return_index=True)
+                    ind=ind.isel(time=index)
+                elif ('final' in indfn) or ('forcing' in indfn):
                     ind=loadTimeSeriesData(filename=indfn, members=[ens], kind='old')
                 else:
                     ind=loadTimeSeriesData(filename=indfn, members=[ens], kind='timeseries')
@@ -409,7 +424,11 @@ def correlationMap_2D_v3(members='all',
         if type(ind_og)==type(None):
             print('...Reading: '+indfn)
             if 'timeseries' in indfn:
-                if ('final' in indfn) or ('forcing' in indfn):
+                if 'GEO' in datafn:
+                    ind=loadTimeSeriesData(filename=indfn, members=[ens], kind='timeseries', PACE=False)
+                    _, index = np.unique(ind['time'], return_index=True)
+                    ind=ind.isel(time=index)
+                elif ('final' in indfn) or ('forcing' in indfn):
                     ind=loadTimeSeriesData(filename=indfn, members=[ens], kind='old')
                 else:
                     ind=loadTimeSeriesData(filename=indfn, members=[ens], kind='timeseries')
@@ -706,50 +725,80 @@ def showCombinedCorrelationMap_2D_v3(members='all',
 
 
     #PLOT CORRELATION COEFFICIENTS
-    img=ax[0].pcolor(maxcor.XC, maxcor.YC, maxcor, cmap='seismic', vmin=-1, vmax=1)
+    img=ax[0].pcolor(maxcor.XC-360, maxcor.YC, maxcor, cmap='seismic', vmin=-1, vmax=1)
     plt.colorbar(img, ax=ax[0], label='Correlation Coefficient')
-    CS=ax[0].contour(maxcor.XC, maxcor.YC, maxcor, [-0.5, 0.5], colors='yellow')
+    CS=ax[0].contour(maxcor.XC-360, maxcor.YC, maxcor, [-0.8, -0.5, 0.5, 0.8], linewidths=[2], colors=['white', 'yellow', 'yellow', 'white'])
     ax[0].clabel(CS, CS.levels, inline=True,fontsize=10)
-
-    bath=ax[0].contour(grid.lon_2d+360, grid.lat_2d, grid.bathy, levels=[-1000], colors=['black'])
+    
+    bathy=grid.bathy
+    bathy[grid.ice_mask | ((grid.lon_2d>-119) & (grid.lat_2d<-72.5))]=np.nan
+    bath=ax[0].contour(grid.lon_2d, grid.lat_2d, grid.bathy, levels=[-1000], linewidths=[2], colors=['black'])
     plt.clabel(bath, [-1000])
+    
+    
     if type(ymax)!=type(None):
         ax[0].set_ylim([-75.5, ymax])
+        
     if 'ice' in mask:
-        ax[0].pcolor(grid.lon_2d+360, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)), np.nan*np.ones(np.shape(grid.ice_mask))), cmap='cool')
+        ax[0].pcolor(grid.lon_2d, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)), np.nan*np.ones(np.shape(grid.ice_mask))), cmap='cool', zorder=10)
     ax[0].set_facecolor('grey')
-    ax[0].set_xlabel('Longitude [deg]')
-    ax[0].set_ylabel('Latitude [deg]')
+    ax[0].set_xlabel('Longitude')
+    ax[0].set_ylabel('Latitude')
     ax[0].set_title('Correlation Coefficient')
-
+    
+    if type(ymax)!=type(None):
+        latlon_axes(ax=ax[0], x=maxcor.XC-360, y=maxcor.YC[maxcor.YC<ymax])
+    else:
+        latlon_axes(ax=ax[0], x=maxcor.XC-360, y=maxcor.YC)
+    
     if draw_box==True:
         ax[0].plot([box_x[0], box_x[1], box_x[1], box_x[0], box_x[0]], [box_y[0], box_y[0], box_y[1], box_y[1], box_y[0]], 'o-k')
-
-    #PLOT OPTIMAL LAG
-    divnorm=MidpointNormalize(vmin=lags[0], vmax=lags[-1], midpoint=0)
     
-    img=ax[1].pcolor(maxcor.XC, maxcor.YC, opt_lag, cmap='seismic', norm=divnorm)
+    
+    
+    #PLOT OPTIMAL LAG
+    if lags[-1]==0:
+        divnorm=MidpointNormalize(vmin=lags[0], vmax=lags[-1], midpoint=0.001)
+    else:
+        divnorm=MidpointNormalize(vmin=lags[0], vmax=lags[-1], midpoint=0)
+    
+    img=ax[1].pcolor(maxcor.XC-360, maxcor.YC, opt_lag, cmap='seismic', norm=divnorm)
     plt.colorbar(img, ax=ax[1], label='Lag [months]', ticks=np.arange(lags[0], lags[-1]+1, 6))
-    bath=ax[1].contour(grid.lon_2d+360, grid.lat_2d, grid.bathy, levels=[-1000], colors=['black'])
+    bath=ax[1].contour(grid.lon_2d, grid.lat_2d, grid.bathy, levels=[-1000], linewidths=[2], colors=['black'])
     plt.clabel(bath, [-1000])
+    
+    
     if type(ymax)!=type(None):
         ax[1].set_ylim([-75.5, ymax])
 
     if 'ice' in mask:
-        ax[1].pcolor(grid.lon_2d+360, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)), np.nan*np.ones(np.shape(grid.ice_mask))), cmap='cool')
+        ax[1].pcolor(grid.lon_2d, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)), np.nan*np.ones(np.shape(grid.ice_mask))), cmap='cool', zorder=10)
     ax[1].set_facecolor('grey')
-    ax[1].set_xlabel('Longitude [deg]')
-    ax[1].set_ylabel('Latitude [deg]')
-
+    ax[1].set_xlabel('Longitude')
+    ax[1].set_ylabel('Latitude')
+    
+    if type(ymax)!=type(None):
+        latlon_axes(ax=ax[1], x=maxcor.XC-360, y=maxcor.YC[maxcor.YC<ymax])
+    else:
+        latlon_axes(ax=ax[1], x=maxcor.XC-360, y=maxcor.YC)
+    
     if draw_box==True:
         ax[1].plot([box_x[0], box_x[1], box_x[1], box_x[0], box_x[0]], [box_y[0], box_y[0], box_y[1], box_y[1], box_y[0]], 'o-k')
+    
+    
     
     if indvar=='dotson_to_cosgrove_massloss':
         timeseries_name='mass loss'
     elif indvar=='amundsen_shelf_break_uwind_avg':
         timeseries_name='wind'
     ax[1].set_title('Lag \n (positive = '+timeseries_name+' leading)')
-
+    
+    import string
+    for n, ax in enumerate(fig.axes[:2]):
+        #Add letters to subplot
+        ax.text(-0.1, 0.9, string.ascii_uppercase[n]+'.', transform=ax.transAxes, 
+                size=25, weight='bold')
+    
     fig.subplots_adjust(hspace=0.5, top=0.85)
 
     if save==True:
@@ -762,51 +811,49 @@ def showCombinedCorrelationMap_2D_v3(members='all',
     fig=plt.figure(figsize=(20,10))
     plt.suptitle('Extra statistics over ensemble members for : \n'+title)
     ax1=plt.subplot(2,3,1)
-    img=plt.pcolor(maxcor.XC, maxcor.YC, maxp, vmin=0, vmax=0.1, cmap='jet')
+    img=plt.pcolor(maxcor.XC-360, maxcor.YC, maxp, vmin=0, vmax=0.1, cmap='jet')
     plt.colorbar(img, label='P value', extend='max')
-    
     plt.title('P value, corr!=0')
+    plt.xticks(rotation = 25)
     
     ax2=plt.subplot(2,3,2)
-    img=plt.pcolor(maxcor.XC, maxcor.YC, opt_lag_p_pos, vmin=0, vmax=0.1, cmap='jet')
+    img=plt.pcolor(maxcor.XC-360, maxcor.YC, opt_lag_p_pos, vmin=0, vmax=0.1, cmap='jet')
     plt.colorbar(img, label='P value', extend='max')
     plt.title('P value, lag>0')
+    plt.xticks(rotation = 25)
     
     ax3=plt.subplot(2,3,3)
-    img=plt.pcolor(maxcor.XC, maxcor.YC, opt_lag_p_neg, vmin=0, vmax=0.1, cmap='jet')
+    img=plt.pcolor(maxcor.XC-360, maxcor.YC, opt_lag_p_neg, vmin=0, vmax=0.1, cmap='jet')
     plt.colorbar(img, label='P value', extend='max')
     plt.title('P value, lag<0')
+    plt.xticks(rotation = 25)
     
     ax4=plt.subplot(2,2,3)
-    img=plt.pcolor(stdcor.XC, stdcor.YC, stdcor, cmap='jet', vmax=0.5)
+    img=plt.pcolor(stdcor.XC-360, stdcor.YC, stdcor, cmap='jet', vmin=0, vmax=0.5)
     plt.colorbar(img, label='Std of cor', extend='max')
     plt.title('Standard deviation of correlation coefficient')
     
     ax5=plt.subplot(2,2,4)
-    img=plt.pcolor(stdcor.XC, stdcor.YC, std_lag, cmap='jet', vmax=12)
+    img=plt.pcolor(stdcor.XC-360, stdcor.YC, std_lag, cmap='jet', vmin=0, vmax=12)
     plt.colorbar(img, label='Std of lag', extend='max')
     plt.title('Standard deviation of lag')
     
     
     if 'ice' in mask:
-        ax1.pcolor(grid.lon_2d+360, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)),\
+        for ax in fig.axes[::2]:
+            ax.pcolor(grid.lon_2d, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)),\
                                                             np.nan*np.ones(np.shape(grid.ice_mask))), cmap='cool')
-        ax2.pcolor(grid.lon_2d+360, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)),\
-                                                            np.nan*np.ones(np.shape(grid.ice_mask))), cmap='cool')
-        ax3.pcolor(grid.lon_2d+360, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)),\
-                                                            np.nan*np.ones(np.shape(grid.ice_mask))), cmap='cool')
-        ax4.pcolor(grid.lon_2d+360, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)),\
-                                                            np.nan*np.ones(np.shape(grid.ice_mask))), cmap='cool')
-        ax5.pcolor(grid.lon_2d+360, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)),\
-                                                            np.nan*np.ones(np.shape(grid.ice_mask))), cmap='cool')
-    ax1.set_facecolor('grey')
-    ax2.set_facecolor('grey')
-    ax3.set_facecolor('grey')
-    ax4.set_facecolor('grey')
-    ax5.set_facecolor('grey')
-    
+
+    import string
+    for n, ax in enumerate(fig.axes[::2]):
+        ax.set_facecolor('grey')
+        ax.text(-0.25, 0.9, string.ascii_uppercase[n]+'.', transform=ax.transAxes, 
+                size=25, weight='bold')
     
     fig.subplots_adjust(hspace=0.5, wspace=0.5, top=0.8)
+    
+    for ax in fig.axes[::2]:
+        latlon_axes(ax=ax, x=maxcor.XC-360, y=maxcor.YC)
     
     if save==True:
         print('...Saving second figure')
@@ -906,7 +953,10 @@ def showCorMapAxis(ax, members='all',
         maxcor=maxcor.expand_dims('ens')
 
     #Perform statistical test
-    maxp=stats.ttest_1samp(maxcor, popmean=0)[1]
+    if members[1]-members[0]==1:
+        maxp=np.zeros(np.shape(maxcor.mean(dim='ens')))
+    else:
+        maxp=stats.ttest_1samp(maxcor, popmean=0)[1]
     
     stdcor=maxcor.std(dim='ens')
     maxcor=maxcor.mean(dim='ens')
@@ -920,22 +970,25 @@ def showCorMapAxis(ax, members='all',
     print('...Plotting')
 
     #PLOT CORRELATION COEFFICIENTS
-    img=ax.pcolor(maxcor.XC, maxcor.YC, maxcor, cmap='seismic', vmin=-1, vmax=1)
+    img=ax.pcolor(maxcor.XC-360, maxcor.YC, maxcor, cmap='seismic', vmin=-1, vmax=1)
     plt.colorbar(img, ax=ax, label='Correlation Coefficient')
-    CS=ax.contour(maxcor.XC, maxcor.YC, maxcor, [-0.5, 0.5], colors='yellow')
+    CS=ax.contour(maxcor.XC-360, maxcor.YC, maxcor, [-0.8, -0.5, 0.5, 0.8], colors=['white', 'yellow','yellow','white'])
     ax.clabel(CS, CS.levels, inline=True,fontsize=10)
 
-    bath=ax.contour(grid.lon_2d+360, grid.lat_2d, grid.bathy, levels=[-1000], colors=['black'])
+    bathy=grid.bathy
+    bathy[grid.ice_mask | ((grid.lon_2d>-119) & (grid.lat_2d<-72.5))]=np.nan
+    bath=ax.contour(grid.lon_2d, grid.lat_2d, grid.bathy, levels=[-1000], linewidths=[2], colors=['black'])
     plt.clabel(bath, [-1000])
     if type(ymax)!=type(None):
         ax.set_ylim([-75.5, ymax])
     if 'ice' in mask:
-        ax.pcolor(grid.lon_2d+360, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)), np.nan*np.ones(np.shape(grid.ice_mask))), cmap='cool')
+        ax.pcolor(grid.lon_2d, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)), np.nan*np.ones(np.shape(grid.ice_mask))), cmap='cool')
     ax.set_facecolor('grey')
-    ax.set_xlabel('Longitude [deg]')
-    ax.set_ylabel('Latitude [deg]')
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
     ax.set_title(title)
-
+    #latlon_axes(ax=ax, x=grid.lon_2d, y=grid.lat_2d)
+    
     if draw_box==True:
         ax.plot([box_x[0], box_x[1], box_x[1], box_x[0], box_x[0]], [box_y[0], box_y[0], box_y[1], box_y[1], box_y[0]], 'o-k')
     
@@ -1050,11 +1103,12 @@ def showLagMapAxis(ax, members='all',
     maxcor=maxcor.mean(dim='ens')
     
     #Find values if not ensemble mean.
-    if members[-1]!=21:
+    if (members[-1]-members[0])==1:
+        std_lag=np.zeros(np.shape(opt_lag))
+    else:
         std_lag=np.nanstd(opt_lag, axis=2)
         opt_lag=np.nanmean(opt_lag, axis=2)
-    else:
-        std_lag=np.zeros(np.shape(opt_lag))
+        
     
     maxcor=maxcor.where((maxp<0.05) | maxcor.isnull(), other=0)
     opt_lag[std_lag>8]=0
@@ -1070,24 +1124,26 @@ def showLagMapAxis(ax, members='all',
         divnorm=MidpointNormalize(vmin=lags[0], vmax=0.1, midpoint=0)  
     else:
         divnorm=MidpointNormalize(vmin=lags[0], vmax=lags[-1], midpoint=0)    
-    img=ax.pcolor(maxcor.XC, maxcor.YC, opt_lag, cmap='seismic', norm=divnorm)
+    img=ax.pcolor(maxcor.XC-360, maxcor.YC, opt_lag, cmap='seismic', norm=divnorm)
     plt.colorbar(img, ax=ax, label='Lag [months]', ticks=np.arange(lags[0], lags[-1]+1, 6))
  
-    bath=ax.contour(grid.lon_2d+360, grid.lat_2d, grid.bathy, levels=[-1000], colors=['black'])
+    bathy=grid.bathy
+    bathy[grid.ice_mask | ((grid.lon_2d>-119) & (grid.lat_2d<-72.5))]=np.nan
+    bath=ax.contour(grid.lon_2d, grid.lat_2d, grid.bathy, levels=[-1000], linewidths=[2], colors=['black'])
     plt.clabel(bath, [-1000])
     if type(ymax)!=type(None):
         ax.set_ylim([-75.5, ymax])
 
     if 'ice' in mask:
-        ax.pcolor(grid.lon_2d+360, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)), np.nan*np.ones(np.shape(grid.ice_mask))), cmap='cool')
+        ax.pcolor(grid.lon_2d, grid.lat_2d, np.where(grid.ice_mask, np.ones(np.shape(grid.ice_mask)), np.nan*np.ones(np.shape(grid.ice_mask))), cmap='cool')
     ax.set_facecolor('grey')
-    ax.set_xlabel('Longitude [deg]')
-    ax.set_ylabel('Latitude [deg]')
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
     ax.set_title(title)
 
     if draw_box==True:
         ax.plot([box_x[0], box_x[1], box_x[1], box_x[0], box_x[0]], [box_y[0], box_y[0], box_y[1], box_y[1], box_y[0]], 'o-k')
-    
+    #latlon_axes(ax=ax, x=grid.lon_2d, y=grid.lat_2d)
     return ax
 
 
@@ -1102,7 +1158,10 @@ def createWindCorrelationMaps(save=True, window=60):
     save (boolean): save figures
     window (int): use correlation coefficients with rolling mean [months]
     '''
-    
+    #Import Grid
+    gp='/data/oceans_output/shelf/kaight/mitgcm/PAS_grid/'
+    grid = Grid(gp)
+
     fig=plt.figure(figsize=(20,10))
 
     ax=plt.subplot(2,2,1)
@@ -1142,6 +1201,14 @@ def createWindCorrelationMaps(save=True, window=60):
     fig.suptitle('Correlations between the Wind and Dotson to Cosgrove Mass Loss')
     plt.rcParams.update({'font.size': 18})
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    
+    for n, ax in enumerate(fig.axes[::2]):
+        ax.set_xticks([-130, -115, -100, -85])
+        ax.set_yticks([-75, -70, -65])
+        latlon_axes(ax=ax, x=grid.lon_2d, y=grid.lat_2d)
+        ax.text(-0.25, 0.9, string.ascii_uppercase[n]+'.', transform=ax.transAxes, 
+            size=25, weight='bold')
+        
     if save==True:
         print('...Saving figure')
         from datetime import date
@@ -1189,6 +1256,14 @@ def createWindCorrelationMaps(save=True, window=60):
     fig.suptitle('Lags between the Wind and Dotson to Cosgrove Mass Loss \n negative = wind is leading')
     plt.rcParams.update({'font.size': 18})
     fig.subplots_adjust(hspace=0.5, wspace=0.5, top=0.8)
+    
+    for n, ax in enumerate(fig.axes[::2]):
+        ax.set_xticks([-130, -115, -100, -85])
+        ax.set_yticks([-75, -70, -65])
+        latlon_axes(ax=ax, x=grid.lon_2d, y=grid.lat_2d)
+        ax.text(-0.25, 0.9, string.ascii_uppercase[n]+'.', transform=ax.transAxes, 
+            size=25, weight='bold')
+        
     if save==True:
         print('...Saving figure')
         from datetime import date
@@ -1206,7 +1281,10 @@ def createFlowCorrelationMaps(save=True, window=60):
     save (boolean): save figures
     window (int): use correlation coefficients with rolling mean [months]
     '''
-
+    #Reading Grid
+    gp='/data/oceans_output/shelf/kaight/mitgcm/PAS_grid/'
+    grid = Grid(gp)
+    
     fig=plt.figure(figsize=(20,15))
     ax=plt.subplot(3,1,1)
     ax, corClin=showCorMapAxis(ax=ax, members='all',
@@ -1227,16 +1305,14 @@ def createFlowCorrelationMaps(save=True, window=60):
                 draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
                 inverse=False, save_results=True, give_back=True, cumsum_map=False)
     
-    #Reading Grid
-    gp='/data/oceans_output/shelf/kaight/mitgcm/PAS_grid/'
-    grid = Grid(gp)
-    
     #Show difference
     ax=plt.subplot(3,1,3)
     difCor=abs(corClin)-abs(corTrop)
-    img=ax.pcolor(corTrop.XC, corTrop.YC, difCor, cmap='seismic', vmin=-1, vmax=1)
+    img=ax.pcolor(corTrop.XC-360, corTrop.YC, difCor, cmap='seismic', vmin=-1, vmax=1)
     plt.colorbar(img, ax=ax, label='Correlation Coefficient')
-    bath=ax.contour(grid.lon_2d+360, grid.lat_2d, grid.bathy, levels=[-1000], colors=['black'])
+    bathy=grid.bathy
+    bathy[grid.ice_mask | ((grid.lon_2d>-119) & (grid.lat_2d<-72.5))]=np.nan
+    bath=ax.contour(grid.lon_2d, grid.lat_2d, grid.bathy, levels=[-1000], linewidths=[2], colors=['black'])
     plt.clabel(bath, [-1000])
     ymax=-70
     if type(ymax)!=type(None):
@@ -1249,6 +1325,14 @@ def createFlowCorrelationMaps(save=True, window=60):
     fig.suptitle('Correlations between the Flow Components and Dotson to Cosgrove Mass Loss')
     #plt.rcParams.update({'font.size': 18})
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    
+    for n, ax in enumerate(fig.axes[::2]):
+        ax.set_xticks([-130, -115, -100, -85])
+        ax.set_yticks([-75, -73, -71])
+        latlon_axes(ax=ax, x=grid.lon_1d, y=grid.lat_1d[grid.lat_1d<-70])
+        ax.text(-0.1, 0.9, string.ascii_uppercase[n]+'.', transform=ax.transAxes, 
+            size=25, weight='bold')
+    
     if save==True:
         print('...Saving figure')
         from datetime import date
@@ -1281,6 +1365,14 @@ def createFlowCorrelationMaps(save=True, window=60):
     fig.suptitle('Lags between the Flow Components and Dotson to Cosgrove Mass Loss \n negative = wind is leading')
     plt.rcParams.update({'font.size': 18})
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    
+    for n, ax in enumerate(fig.axes[::2]):
+        ax.set_xticks([-130, -115, -100, -85])
+        ax.set_yticks([-75, -73, -71])
+        latlon_axes(ax=ax, x=grid.lon_1d, y=grid.lat_1d[grid.lat_1d<-70])
+        ax.text(-0.1, 0.9, string.ascii_uppercase[n]+'.', transform=ax.transAxes, 
+            size=25, weight='bold')
+        
     if save==True:
         print('...Saving figure')
         from datetime import date
@@ -1445,10 +1537,15 @@ def correlationMapPACE(members='all',
             ax.contour(res.lon, res.lat, 
                           maxcor, levels=[-0.5, 0.5], c=['yellow', 'yellow'],
                           transform=ccrs.PlateCarree())
-        elif 'SST' in datavar:
+        elif ('SST' in datavar): 
             img=ax.scatter(res.TLONG.to_numpy().flatten(), res.TLAT.to_numpy().flatten(), s=0.3,
                           c=maxcor.to_numpy().flatten(), 
                           cmap='seismic', transform=ccrs.PlateCarree(), vmin=-1, vmax=1)
+        elif ('aice' in datavar):
+                img=ax.scatter(res.TLON.to_numpy().flatten(), res.TLAT.to_numpy().flatten(), s=0.3,
+                          c=maxcor.to_numpy().flatten(), 
+                          cmap='seismic', transform=ccrs.PlateCarree(), vmin=-1, vmax=1)
+
         ax.set_facecolor('grey')
         plt.colorbar(img, label='Correlation Coefficient', pad=0.10, ax=ax)
         ax.coastlines()
@@ -1469,8 +1566,12 @@ def correlationMapPACE(members='all',
             img=ax.pcolormesh(res.lon, res.lat, 
                           opt_lag, 
                           cmap='seismic', transform=ccrs.PlateCarree(), vmin=lags[0], vmax=lags[-1])
-        elif 'SST' in datavar:
+        elif ('SST' in datavar):
             img=ax.scatter(res.TLONG.to_numpy().flatten(), res.TLAT.to_numpy().flatten(), s=0.3,
+                          c=opt_lag.flatten(), 
+                          cmap='seismic', transform=ccrs.PlateCarree(), vmin=lags[0], vmax=lags[-1])
+        elif ('aice' in datavar):
+            img=ax.scatter(res.TLON.to_numpy().flatten(), res.TLAT.to_numpy().flatten(), s=0.3,
                           c=opt_lag.flatten(), 
                           cmap='seismic', transform=ccrs.PlateCarree(), vmin=lags[0], vmax=lags[-1])
         ax.set_facecolor('grey')
@@ -1502,9 +1603,6 @@ def correlationMapPACE(members='all',
 
     return
   
-  
-
-
 
 def showMapPACE(members='all',
               data=None, datavar='PSL',
@@ -1514,7 +1612,7 @@ def showMapPACE(members='all',
               save=False, savefn='test',
               draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
               inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False):
-   '''
+    '''
     Show a correlation map with one spatial variable with one component (e.g. PSL, SST) from PACE Ensemble.
     The correlation already has to be performed.
     
@@ -1635,7 +1733,7 @@ def showMapPACE(members='all',
     
     
     #Interpolate the correlation coefficients when the variable is SST
-    if 'SST' in datavar:
+    if ('SST' in datavar) | ('aice' in datavar):
         def regridSST(z, x, y):
             from scipy.interpolate import griddata
             PSL=loadPACEData(var='PSL', members=[0,1])
@@ -1651,14 +1749,22 @@ def showMapPACE(members='all',
                                 lat=ygrid)                        
                                     )
             return var_new
-        
-        opt_lag=regridSST(z=opt_lag.flatten(),
-                         x=maxcor.ULONG.to_numpy().flatten(),
-                         y=maxcor.ULAT.to_numpy().flatten())
-        
-        maxcor=regridSST(z=maxcor.to_numpy().flatten(),
-                         x=maxcor.ULONG.to_numpy().flatten(),
-                         y=maxcor.ULAT.to_numpy().flatten())
+        if 'SST' in datavar:
+            opt_lag=regridSST(z=opt_lag.flatten(),
+                             x=maxcor.ULONG.to_numpy().flatten(),
+                             y=maxcor.ULAT.to_numpy().flatten())
+
+            maxcor=regridSST(z=maxcor.to_numpy().flatten(),
+                             x=maxcor.ULONG.to_numpy().flatten(),
+                             y=maxcor.ULAT.to_numpy().flatten())
+        else:
+            opt_lag=regridSST(z=opt_lag.flatten(),
+                             x=maxcor.ULON.to_numpy().flatten(),
+                             y=maxcor.ULAT.to_numpy().flatten())
+
+            maxcor=regridSST(z=maxcor.to_numpy().flatten(),
+                             x=maxcor.ULON.to_numpy().flatten(),
+                             y=maxcor.ULAT.to_numpy().flatten())
         
     #Show the correlation coefficients.
     img=ax.pcolormesh(maxcor.lon, maxcor.lat, 
@@ -1749,7 +1855,7 @@ def showCorMapPACEAxis(ax, members='all',
               save=False, savefn='test',
               draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
               inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False):
-   '''
+    '''
     Plot correlation map in specific axis for PACE. Use spatial variable with one component (e.g. PSL, SST) from PACE Ensemble.
     The correlation already has to be performed.
     
@@ -1863,10 +1969,10 @@ def showCorMapPACEAxis(ax, members='all',
     #PLOT CORRELATION COEFFICIENTS
     
     #Regrid the SST correlation coefficients.
-    if 'SST' in datavar:
+    if ('SST' in datavar) | ('aice' in datavar):
         def regridSST(z, x, y):
             from scipy.interpolate import griddata
-            PSL=loadPACEData(var='PSL', members=[0,1])
+            PSL=xr.open_dataarray('../02_data/correlation/maxcor_PSL_dotson_to_cosgrove_massloss_dtTrue_dSTrue_w24_ens1.nc')#loadPACEData(var='PSL', members=[0,1])
             xgrid=PSL.lon
             ygrid=PSL.lat
             xi,yi = np.meshgrid(xgrid,ygrid)
@@ -1879,10 +1985,14 @@ def showCorMapPACEAxis(ax, members='all',
                                 lat=ygrid)                        
                                     )
             return var_new
-        
-        maxcor=regridSST(z=maxcor.to_numpy().flatten(),
-                         x=maxcor.ULONG.to_numpy().flatten(),
-                         y=maxcor.ULAT.to_numpy().flatten())
+        if 'SST' in datavar:
+            maxcor=regridSST(z=maxcor.to_numpy().flatten(),
+                             x=maxcor.ULONG.to_numpy().flatten(),
+                             y=maxcor.ULAT.to_numpy().flatten())
+        else:
+            maxcor=regridSST(z=maxcor.to_numpy().flatten(),
+                             x=maxcor.ULON.to_numpy().flatten(),
+                             y=maxcor.ULAT.to_numpy().flatten())
     
     #Plot axis
     img=ax.pcolormesh(maxcor.lon, maxcor.lat, 
@@ -1910,7 +2020,7 @@ def showLagMapPACEAxis(ax, members='all',
               save=False, savefn='test',
               draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
               inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False):
-   '''
+    '''
     Plot lag map in specific axis for PACE. Use spatial variable with one component (e.g. PSL, SST) from PACE Ensemble.
     The correlation already has to be performed.
     
@@ -2025,10 +2135,10 @@ def showLagMapPACEAxis(ax, members='all',
     #PLOT CORRELATION COEFFICIENTS
     
     #Regrid SST lags.
-    if 'SST' in datavar:
+    if ('SST' in datavar) | ('aice' in datavar):
         def regridSST(z, x, y):
             from scipy.interpolate import griddata
-            PSL=loadPACEData(var='PSL', members=[0,1])
+            PSL=xr.open_dataarray('../02_data/correlation/maxcor_PSL_dotson_to_cosgrove_massloss_dtTrue_dSTrue_w24_ens1.nc')
             xgrid=PSL.lon
             ygrid=PSL.lat
             xi,yi = np.meshgrid(xgrid,ygrid)
@@ -2041,15 +2151,22 @@ def showLagMapPACEAxis(ax, members='all',
                                 lat=ygrid)                        
                                     )
             return var_new
-        
-        opt_lag=regridSST(z=opt_lag.flatten(),
-                         x=maxcor.ULONG.to_numpy().flatten(),
-                         y=maxcor.ULAT.to_numpy().flatten())
-        
-        maxcor=regridSST(z=maxcor.to_numpy().flatten(),
-                         x=maxcor.ULONG.to_numpy().flatten(),
-                         y=maxcor.ULAT.to_numpy().flatten())
-        
+        if 'SST' in datavar:
+            opt_lag=regridSST(z=opt_lag.flatten(),
+                             x=maxcor.ULONG.to_numpy().flatten(),
+                             y=maxcor.ULAT.to_numpy().flatten())
+
+            maxcor=regridSST(z=maxcor.to_numpy().flatten(),
+                             x=maxcor.ULONG.to_numpy().flatten(),
+                             y=maxcor.ULAT.to_numpy().flatten())
+        else:
+            opt_lag=regridSST(z=opt_lag.flatten(),
+                             x=maxcor.ULON.to_numpy().flatten(),
+                             y=maxcor.ULAT.to_numpy().flatten())
+
+            maxcor=regridSST(z=maxcor.to_numpy().flatten(),
+                             x=maxcor.ULON.to_numpy().flatten(),
+                             y=maxcor.ULAT.to_numpy().flatten())
 
     #Use proper colormap
     if lags[-1]<0:
@@ -2082,7 +2199,7 @@ def createPACECorrelationMaps(save=True):
     import cartopy.crs as ccrs
     fig=plt.figure(figsize=(20,10))
 
-    ax = plt.subplot(221, projection=ccrs.PlateCarree(central_longitude=180.0))
+    ax = plt.subplot(223, projection=ccrs.PlateCarree(central_longitude=180.0))
     showCorMapPACEAxis(ax,members='all',
                    data=None, datavar='PSL',
                    ind=None, indfn='timeseries_final', indvar='amundsen_shelf_break_uwind_avg', lags=range(-24, 0),
@@ -2091,10 +2208,10 @@ def createPACECorrelationMaps(save=True):
                    save=True, savefn='PACE_PSL_amundsen_shelf_break_uwind_'+str(window)+'month_dt',
                    draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
                    inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False)
-    ax.text(-0.1, 1.1, string.ascii_uppercase[0], transform=ax.transAxes, 
+    ax.text(-0.1, 1.1, string.ascii_uppercase[2], transform=ax.transAxes, 
             size=20, weight='bold')
     
-    ax = plt.subplot(222, projection=ccrs.PlateCarree(central_longitude=180.0))
+    ax = plt.subplot(224, projection=ccrs.PlateCarree(central_longitude=180.0))
     showCorMapPACEAxis(ax,members='all',
                    data=None, datavar='PSL',
                    ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
@@ -2103,10 +2220,10 @@ def createPACECorrelationMaps(save=True):
                    save=True, savefn='PACE_PSL_amundsen_shelf_break_uwind_'+str(window)+'month_dt',
                    draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
                    inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False)
-    ax.text(-0.1, 1.1, string.ascii_uppercase[1], transform=ax.transAxes, 
+    ax.text(-0.1, 1.1, string.ascii_uppercase[3], transform=ax.transAxes, 
             size=20, weight='bold')
     
-    ax = plt.subplot(223, projection=ccrs.PlateCarree(central_longitude=180.0))
+    ax = plt.subplot(221, projection=ccrs.PlateCarree(central_longitude=180.0))
     showCorMapPACEAxis(ax,members='all',
                    data=None, datavar='SST',
                    ind=None, indfn='timeseries_final', indvar='amundsen_shelf_break_uwind_avg', lags=range(-24, 0),
@@ -2115,25 +2232,30 @@ def createPACECorrelationMaps(save=True):
                    save=True, savefn='PACE_SST_amundsen_shelf_break_uwind_'+str(window)+'month_dt',
                    draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
                    inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False)
-    ax.text(-0.1, 1.1, string.ascii_uppercase[2], transform=ax.transAxes, 
+    ax.text(-0.1, 1.1, string.ascii_uppercase[0], transform=ax.transAxes, 
             size=20, weight='bold')
     
-    ax = plt.subplot(224, projection=ccrs.PlateCarree(central_longitude=180.0))
+    ax = plt.subplot(222, projection=ccrs.PlateCarree(central_longitude=180.0))
     showCorMapPACEAxis(ax,members='all',
                    data=None, datavar='SST',
                    ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
                    years=['1920', '2013'],
-                   detrend=True, deseasonalize=True, window=window, title='SST vs Dotson \n to Cosgrove Mass Loss', ymax=-70, 
+                   detrend=True, deseasonalize=True, window=window, title='SST vs Ice Shelf Basal Mass \n Loss (Dotson to Cosgrove)', ymax=-70, 
                    save=True, savefn='PACE_PSL_amundsen_shelf_break_uwind_'+str(window)+'month_dt',
                    draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
                    inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False)
-    ax.text(-0.1, 1.1, string.ascii_uppercase[3], transform=ax.transAxes, 
+    ax.text(-0.1, 1.1, string.ascii_uppercase[1], transform=ax.transAxes, 
             size=20, weight='bold')
     
     fig.suptitle('Correlation of Amundsen Sea Zonal Wind and Mass Loss with Global SST and SLP')
                  #'\n Mean over Members 1-20; 60 month running mean; p<0.05')
     plt.rcParams.update({'font.size': 18})
     fig.subplots_adjust(hspace=0.5, wspace=0.5, top=0.85)
+    
+#     for n, ax in enumerate(fig.axes[::2]):
+#         ax.text(-0.25, 0.9, string.ascii_uppercase[n]+'.', transform=ax.transAxes, 
+#             size=25, weight='bold')
+        
     if save==True:
         print('...Saving figure')
         from datetime import date
@@ -2146,7 +2268,7 @@ def createPACECorrelationMaps(save=True):
     window=60
     fig=plt.figure(figsize=(20,10))
     
-    ax = plt.subplot(221, projection=ccrs.PlateCarree(central_longitude=180.0))
+    ax = plt.subplot(223, projection=ccrs.PlateCarree(central_longitude=180.0))
     showLagMapPACEAxis(ax,members='all',
                    data=None, datavar='PSL',
                    ind=None, indfn='timeseries_final', indvar='amundsen_shelf_break_uwind_avg', lags=range(-24, 0),
@@ -2156,17 +2278,17 @@ def createPACECorrelationMaps(save=True):
                    draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
                    inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False)
     
-    ax = plt.subplot(222, projection=ccrs.PlateCarree(central_longitude=180.0))
+    ax = plt.subplot(224, projection=ccrs.PlateCarree(central_longitude=180.0))
     showLagMapPACEAxis(ax,members='all',
                    data=None, datavar='PSL',
                    ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
                    years=['1920', '2013'],
-                   detrend=True, deseasonalize=True, window=window, title='SLP vs Dotson \n to Cosgrove Mass Loss', ymax=-70, 
+                   detrend=True, deseasonalize=True, window=window, title='SLP vs Ice Shelf Basal \n Mass Loss (Dotson to Cosgrove)', ymax=-70, 
                    save=True, savefn='PACE_PSL_amundsen_shelf_break_uwind_'+str(window)+'month_dt',
                    draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
                    inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False)
 
-    ax = plt.subplot(223, projection=ccrs.PlateCarree(central_longitude=180.0))
+    ax = plt.subplot(221, projection=ccrs.PlateCarree(central_longitude=180.0))
     showLagMapPACEAxis(ax,members='all',
                    data=None, datavar='SST',
                    ind=None, indfn='timeseries_final', indvar='amundsen_shelf_break_uwind_avg', lags=range(-24, 0),
@@ -2176,7 +2298,7 @@ def createPACECorrelationMaps(save=True):
                    draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
                    inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False)
     
-    ax = plt.subplot(224, projection=ccrs.PlateCarree(central_longitude=180.0))
+    ax = plt.subplot(222, projection=ccrs.PlateCarree(central_longitude=180.0))
     showLagMapPACEAxis(ax,members='all',
                    data=None, datavar='SST',
                    ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
@@ -2188,6 +2310,11 @@ def createPACECorrelationMaps(save=True):
     fig.suptitle('Lags of Amundsen Sea Zonal Wind and Mass Loss with Global SST and SLP \n negative = global forcing is leading')  #\n Mean over Members 1-20; 60 month running mean; p<0.05')
     plt.rcParams.update({'font.size': 18})
     fig.subplots_adjust(hspace=0.5, wspace=0.5, top=0.8)
+    
+    for n, ax in enumerate(fig.axes[::2]):
+        ax.text(-0.25, 0.9, string.ascii_uppercase[n]+'.', transform=ax.transAxes, 
+            size=25, weight='bold')
+    
     if save==True:
         print('...Saving figure')
         from datetime import date
@@ -2211,6 +2338,174 @@ class MidpointNormalize(mpl.colors.Normalize):
         x, y = [self.vmin, self.midpoint, self.vmax], [normalized_min, normalized_mid, normalized_max]
         return np.ma.masked_array(np.interp(value, x, y))
     
+
+    
+
+def createMapsOfProcess(save=True):
+    window=12
+    
+    #Import Grid
+    gp='/data/oceans_output/shelf/kaight/mitgcm/PAS_grid/'
+    grid = Grid(gp)
+    
+    fig=plt.figure(figsize=(20,15))
+    ax=plt.subplot(3,2,1)
+    ax=showCorMapAxis(ax=ax, members='all',
+                  data=None, datafn='EXFuwind', datavar='EXFuwind', datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
+                  detrend=True, window=window, title='Zonal Wind', ymax=None, save=True, savefn='EXFuwind_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False,
+                  give_back=False, deseasonalize=True, cumsum_map=False)
+
+    ax=plt.subplot(3,2,2)
+    showCorMapAxis(ax=ax, members='all',
+                      data=None, datafn='EXFvwind', datavar='EXFvwind', datakind='maps',
+                      ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
+                      detrend=True, window=window, title='Meridional Wind', ymax=None, save=True, savefn='EXFvwind_dotson_to_cosgrove_'+str(window)+'month_dt',
+                      draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                      inverse=False,
+                      give_back=False, deseasonalize=True, cumsum_map=False)
+    
+    ax=plt.subplot(3,2,3)
+    ax=showCorMapAxis(ax=ax, members=[0,14],
+                  data=None, datafn='oceFWflx', datavar='oceFWflx', datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+                  detrend=True, window=window, title='Surface Freshwater Flux', ymax=-70, save=True, savefn='oceFWflx_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False,
+                  give_back=False, deseasonalize=True, cumsum_map=False)
+    
+    ax=plt.subplot(3,2,4)
+    ax=showCorMapAxis(ax=ax, members='all',
+                  data=None, datafn='SALT_averaged_-200to0', datavar='SALT', datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', 
+                  lags=range(-24, 24),
+                  detrend=True, window=window, 
+                  title='Average Salinity (-200 to 0m)', ymax=-70, save=True, 
+                  savefn='SALT-200to0_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False,
+                  give_back=False, deseasonalize=True, cumsum_map=False)
+    
+    
+    ax=plt.subplot(3,2,5)
+    ax=showCorMapAxis(ax=ax, members='all',
+                  data=None, datafn='ADVx_TH_corrected_bottom100m_averaged', datavar='ADVx_TH',\
+                  datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss',\
+                  lags=range(-24, 24),
+                  detrend=True, window=window, title='Heat Advection in Bottom 100m', ymax=-70,\
+                  save=True,
+                  savefn='bottom100m_ADV_TH_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False,
+                  give_back=False, deseasonalize=False)
+
+    fig.suptitle('Correlations with Dotson to Cosgrove Mass Loss \n {} months running mean'.format(str(window)))
+    #plt.rcParams.update({'font.size': 18})
+    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    
+    for n, ax in enumerate(fig.axes[::2]):
+        ax.text(-0.25, 0.9, string.ascii_uppercase[n]+'.', transform=ax.transAxes, 
+            size=25, weight='bold')
+    for n, ax in enumerate(fig.axes[::2][:2]):
+        ax.set_xticks([-130, -115, -100, -85])
+        ax.set_yticks([-75, -70, -65])
+        latlon_axes(ax=ax, x=grid.lon_1d, y=grid.lat_1d)
+    for n, ax in enumerate(fig.axes[::2][2:]):
+        ax.set_xticks([-130, -115, -100, -85])
+        ax.set_yticks([-75, -73, -71])
+        latlon_axes(ax=ax, x=grid.lon_1d, y=grid.lat_1d[grid.lat_1d<-70])
+    
+    if save==True:
+        print('...Saving figure')
+        from datetime import date
+        today = date.today()
+        today=today.strftime("%Y%m%d")
+        fig.savefig('../03_output/correlation/'+today+'_process_{}months_corrcoeff.png'.format(str(window)))
+        
+    #----LAGS-----
+    fig=plt.figure(figsize=(20,15))
+    
+    ax=plt.subplot(3,2,1)
+    ax=showLagMapAxis(ax=ax, members='all',
+                  data=None, datafn='EXFuwind', datavar='EXFuwind', datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
+                  detrend=True, window=window, title='Zonal Wind', ymax=None, save=True, savefn='EXFuwind_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False,
+                  give_back=False, deseasonalize=True, cumsum_map=False)
+
+    ax=plt.subplot(3,2,2)
+    showLagMapAxis(ax=ax, members='all',
+                      data=None, datafn='EXFvwind', datavar='EXFvwind', datakind='maps',
+                      ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
+                      detrend=True, window=window, title='Meridional Wind', ymax=None, save=True, savefn='EXFvwind_dotson_to_cosgrove_'+str(window)+'month_dt',
+                      draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                      inverse=False,
+                      give_back=False, deseasonalize=True, cumsum_map=False)
+    
+    ax=plt.subplot(3,2,3)
+    ax=showLagMapAxis(ax=ax, members=[0,14],
+                  data=None, datafn='oceFWflx', datavar='oceFWflx', datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+                  detrend=True, window=window, title='Surface Freshwater Flux', ymax=-70, save=True, savefn='oceFWflx_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False,
+                  give_back=False, deseasonalize=True, cumsum_map=False)
+    
+    ax=plt.subplot(3,2,4)
+    ax=showLagMapAxis(ax=ax, members='all',
+                  data=None, datafn='SALT_averaged_-200to0', datavar='SALT', datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', 
+                  lags=range(-24, 24),
+                  detrend=True, window=window, 
+                  title='Average Salinity (-200 to 0m)', ymax=-70, save=True, 
+                  savefn='SALT-200to0_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False,
+                  give_back=False, deseasonalize=True, cumsum_map=False)
+    
+    ax=plt.subplot(3,2,5)
+    ax=showLagMapAxis(ax=ax, members='all',
+                  data=None, datafn='ADVx_TH_corrected_bottom100m_averaged', datavar='ADVx_TH',\
+                  datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss',\
+                  lags=range(-24, 24),
+                  detrend=True, window=window, title='Heat Advection in Bottom 100m', ymax=-70,\
+                  save=True,
+                  savefn='bottom100m_ADV_TH_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False,
+                  give_back=False, deseasonalize=False)
+
+    
+    
+    fig.suptitle('Lags with Dotson to Cosgrove Mass Loss \n {} months running mean'.format(str(window)))
+    plt.rcParams.update({'font.size': 18})
+    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    
+    for n, ax in enumerate(fig.axes[::2]):
+        ax.text(-0.25, 0.9, string.ascii_uppercase[n]+'.', transform=ax.transAxes, 
+            size=25, weight='bold')
+    for n, ax in enumerate(fig.axes[::2][:2]):
+        ax.set_xticks([-130, -115, -100, -85])
+        ax.set_yticks([-75, -70, -65])
+        latlon_axes(ax=ax, x=grid.lon_1d, y=grid.lat_1d)
+    for n, ax in enumerate(fig.axes[::2][2:]):
+        ax.set_xticks([-130, -115, -100, -85])
+        ax.set_yticks([-75, -73, -71])
+        latlon_axes(ax=ax, x=grid.lon_1d, y=grid.lat_1d[grid.lat_1d<-70])
+        
+    
+    if save==True:
+        print('...Saving figure')
+        from datetime import date
+        today = date.today()
+        today=today.strftime("%Y%m%d")
+        fig.savefig('../03_output/correlation/'+today+'_process_{}months_lags.png'.format(str(window)))
+    return    
     
     
 #def simpleCorrelationMap(members='all',

@@ -297,7 +297,7 @@ def readMITgcmData_depth(var, bd='/data/oceans_output/shelf/kaight/mitgcm', meth
 
 
 
-def readMITgcmData_advection(var_name='ADVx_TH', members='all', bd='/data/oceans_output/shelf/kaight/mitgcm',  gp='/data/oceans_output/shelf/kaight/mitgcm/PAS_grid/', zbottom=200):
+def readMITgcmData_advection(var_name='ADVx_TH', members='all', bd='/data/oceans_output/shelf/kaight/mitgcm',  gp='/data/oceans_output/shelf/kaight/mitgcm/PAS_grid/', zbottom=100, GEO=False):
     '''
     Read advection data from MITgcm output nc-files and take a vertical average or sum.
     Makes use of the Kaitlin's code.
@@ -308,6 +308,7 @@ def readMITgcmData_advection(var_name='ADVx_TH', members='all', bd='/data/oceans
     members: members to read ('all' or list with boundaries (e.g. [0, 1] for member 1)).
     zbottom (int): in case we are looking at a specific area above the bottom, define the upper limit (this case 100m above seafloor).NOTE: IS 100m ABOVE THE GRID BATHYMETRY: HOWEVER, SOME LOCATIONS HAVE VALUES BELOW THIS BATHYMETRY!
     gp (string): grid path
+    GEO (boolean): Do we want to read the data from the new geometry runs?
     
     OUTPUT:
     data (xr.Dataset): dataset containing the variable of interest and the ensemble members along dimension 'ens'.
@@ -322,7 +323,11 @@ def readMITgcmData_advection(var_name='ADVx_TH', members='all', bd='/data/oceans
     #%% MAIN CODE
     #%% INITIALISATION
     #Select the relevant folders
-    segment_dir=[i for i in os.listdir('/data/oceans_output/shelf/kaight/mitgcm/PAS_PACE01/output') if (i[0]=='1') | (i[0]=='2')]
+    if GEO==False:
+        segment_dir=[i for i in os.listdir('/data/oceans_output/shelf/kaight/mitgcm/PAS_PACE01/output') if (i[0]=='1') | (i[0]=='2')]
+    else:
+        print('Taking GEO!')
+        segment_dir=[i for i in os.listdir('/data/oceans_output/shelf/grejan/archer2_mitgcm_GEO/PAS_06_GEO/output') if (i[0]=='1') | (i[0]=='2')]
 
     #Create the name of the y variable.
     var_y = var_name.replace('x', 'y')
@@ -332,7 +337,10 @@ def readMITgcmData_advection(var_name='ADVx_TH', members='all', bd='/data/oceans
     grid = Grid(gp)
     #Bottom Flux
     print('Start with bottom mask!')
-    data_xr=xr.open_dataset('/data/oceans_output/shelf/kaight/mitgcm/PAS_PACE01/output/194001/MITgcm/output.nc')
+    if GEO==False:
+        data_xr=xr.open_dataset('/data/oceans_output/shelf/kaight/mitgcm/PAS_PACE01/output/194001/MITgcm/output.nc')
+    else:
+        data_xr=xr.open_dataset('/data/oceans_output/shelf/grejan/archer2_mitgcm_GEO/PAS_06_GEO/output/194001/MITgcm/output.nc')
     
     #Create bottom mask
     depth=data_xr[var_name].Z.to_numpy()
@@ -345,23 +353,35 @@ def readMITgcmData_advection(var_name='ADVx_TH', members='all', bd='/data/oceans
     print('Created a bottom mask!')
     
     #Creating list with files to read.
-    if members=='all':
-        pdir=[os.path.join(bd, f, 'output') for f in os.listdir(bd) if ('PAS_PACE' in f) & ('hb' not in f)]
-        number=20
+    if GEO==False:
+        if members=='all':
+            pdir=[os.path.join(bd, f, 'output') for f in os.listdir(bd) if ('PAS_PACE' in f) & ('hb' not in f)]
+            number=20
+        else:
+            pdir=[os.path.join(bd, f, 'output') for f in os.listdir(bd) if ('PAS_PACE' in f) & ('hb' not in f)][members[0]:members[-1]]
+            number=members[-1]-members[0]
     else:
-        pdir=[os.path.join(bd, f, 'output') for f in os.listdir(bd) if ('PAS_PACE' in f) & ('hb' not in f)][members[0]:members[-1]]
+        #Creating list with files to read.
+        pdir=[os.path.join(bd, f, 'output') for f in os.listdir(bd) if ('GEO' in f) & (str(members[-1]).zfill(2) in f) & ('wrong' not in f) & ('old' not in f)]
+        
         number=members[-1]-members[0]
+    
     
     pdir.sort()
     segment_dir.sort()
     #Read the data
     for i, p in enumerate(pdir):
-        print('Start with member: '+str(i+1))
+        if number==1:
+            print('Start with member: '+str(members[-1]))
+        else:
+            print('Start with member: '+str(i+1))
+            
+        
         output_dir=p
         for k, seg in enumerate(segment_dir):
             print('Start with '+seg)
             file_path=os.path.join(output_dir, seg, 'MITgcm/output.nc')
-            
+            print(file_path)
             data_xr=xr.open_dataset(file_path) #Make sure that the time axis is correct...
             
             #Read x and y data
@@ -407,11 +427,35 @@ def readMITgcmData_advection(var_name='ADVx_TH', members='all', bd='/data/oceans
                 bottomy=xr.concat([bottomy,ay], dim='time')
         
         #Save to Netcdf files
-        fullx.to_netcdf('../02_data/maps/'+var_name+'_corrected_depth_averaged_ens'+str(i+1)+'.nc')
-        fully.to_netcdf('../02_data/maps/'+var_y+'_corrected_depth_averaged_ens'+str(i+1)+'.nc')    
+        if GEO==False:
+            if number==1:
+                fullx.to_netcdf('../02_data/maps/'+var_name+'_corrected_depth_averaged_ens'+str(members[-1])+'.nc')
+                fully.to_netcdf('../02_data/maps/'+var_y+'_corrected_depth_averaged_ens'+str(members[-1])+'.nc')    
 
-        bottomx.to_netcdf('../02_data/maps/'+var_name+'_corrected_new_bottom'+str(zbottom)+'m_averaged_ens'+str(i+1)+'.nc')
-        bottomy.to_netcdf('../02_data/maps/'+var_y+'_corrected_new_bottom'+str(zbottom)+'m_averaged_ens'+str(i+1)+'.nc')   
+                bottomx.to_netcdf('../02_data/maps/'+var_name+'_corrected_new_bottom'+str(zbottom)+'m_averaged_ens'+str(members[-1])+'.nc')
+                bottomy.to_netcdf('../02_data/maps/'+var_y+'_corrected_new_bottom'+str(zbottom)+'m_averaged_ens'+str(members[-1])+'.nc')   
+            else:
+                fullx.to_netcdf('../02_data/maps/'+var_name+'_corrected_depth_averaged_ens'+str(i+1)+'.nc')
+                fully.to_netcdf('../02_data/maps/'+var_y+'_corrected_depth_averaged_ens'+str(i+1)+'.nc')    
+
+                bottomx.to_netcdf('../02_data/maps/'+var_name+'_corrected_new_bottom'+str(zbottom)+'m_averaged_ens'+str(i+1)+'.nc')
+                bottomy.to_netcdf('../02_data/maps/'+var_y+'_corrected_new_bottom'+str(zbottom)+'m_averaged_ens'+str(i+1)+'.nc')   
+        else:
+            print('SAVE GEO!')
+            if number==1:
+                fullx.to_netcdf('../02_data/maps/GEO_'+var_name+'_corrected_depth_averaged_ens'+str(members[-1])+'.nc')
+                fully.to_netcdf('../02_data/maps/GEO_'+var_y+'_corrected_depth_averaged_ens'+str(members[-1])+'.nc')    
+                
+                bottomx.to_netcdf('../02_data/maps/GEO_'+var_name+'_corrected_new_bottom'+str(zbottom)+'m_averaged_ens'+str(members[-1])+'.nc')
+                bottomy.to_netcdf('../02_data/maps/GEO_'+var_y+'_corrected_new_bottom'+str(zbottom)+'m_averaged_ens'+str(members[-1])+'.nc')   
+
+            else:
+                fullx.to_netcdf('../02_data/maps/GEO_'+var_name+'_corrected_depth_averaged_ens'+str(i+1)+'.nc')
+                fully.to_netcdf('../02_data/maps/GEO_'+var_y+'_corrected_depth_averaged_ens'+str(i+1)+'.nc')    
+
+                bottomx.to_netcdf('../02_data/maps/GEO_'+var_name+'_corrected_new_bottom'+str(zbottom)+'m_averaged_ens'+str(i+1)+'.nc')
+                bottomy.to_netcdf('../02_data/maps/GEO_'+var_y+'_corrected_new_bottom'+str(zbottom)+'m_averaged_ens'+str(i+1)+'.nc')   
+
         
         print('Finished with member: '+str(i))
     print('Finished with *EVERYTHING*!')
@@ -522,16 +566,16 @@ def readMITgcmData_Slice(var, bd='/data/oceans_output/shelf/kaight/mitgcm', memb
                 else:
                     b.to_netcdf('../02_data/slices/'+filename+'_'+var+'_S'+str(abs(y)).replace(".", "-")+'_ens'+str(i+1)+'.nc') #in case we want to give it an extra name.
                     
-        if i==0:
-            data=b
-        else:
-            data=xr.concat([data,b], dim='ens')
+#         if i==0:
+#             data=b
+#         else:
+#             data=xr.concat([data,b], dim='ens')
             
-    #Making sure that the dataset has the dimension 'ens'
-    if number==1:
-        data=data.expand_dims("ens")
+#     #Making sure that the dataset has the dimension 'ens'
+#     if number==1:
+#         data=data.expand_dims("ens")
     
-    return data
+    return #data
 
 
 def readMITgcmData_Transect(var, bd='/data/oceans_output/shelf/kaight/mitgcm', members='all', 

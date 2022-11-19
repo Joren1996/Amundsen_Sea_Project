@@ -7,7 +7,7 @@ This file should contain test!.
 @author: joren
 """
 
-from functions.correlation_maps import correlationMap_1D_v3, correlationMap_2D_v3,  showCombinedCorrelationMap_2D_v3, showMapPACE, createPACECorrelationMaps, createWindCorrelationMaps, createFlowCorrelationMaps#, correlationMap_2D, correlationMap_1D, showCombinedCorMap_Barotropic_Baroclinic,
+from functions.correlation_maps import correlationMap_1D_v3, correlationMap_2D_v3,  showCombinedCorrelationMap_2D_v3, showMapPACE, createPACECorrelationMaps, createWindCorrelationMaps, createFlowCorrelationMaps, createMapsOfProcess#, correlationMap_2D, correlationMap_1D, showCombinedCorMap_Barotropic_Baroclinic,
 from functions.loading_and_processing_data import loadMITgcmData
 from functions.other_functions import computeBuoyancy
 import numpy as np
@@ -70,10 +70,69 @@ showCombinedCorrelationMap_2D_v3(members='all',
 createPACECorrelationMaps(save=True)
 
 
+#Appendix
+createMapsOfProcess()
 
 
+#Extra statistics:
+window=60
+showCombinedCorrelationMap_2D_v3(members='all',
+                  data=None, datafn='EXFuwind', datavar='EXFuwind', datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
+                  detrend=True, window=window, title='Correlation of Zonal Wind with Ice Shelf Basal Mass Loss (Dotson to Cosgrove)', ymax=None, save=True, savefn='EXFvwind_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False, mask='land_and_ice_mask',
+                  give_back=False, deseasonalize=True, cumsum_map=False )
+
+showCombinedCorrelationMap_2D_v3(members='all',
+                  data=None, datafn='EXFvwind', datavar='EXFvwind', datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
+                  detrend=True, window=window, title='Meridional Wind', ymax=None, save=True, savefn='EXFvwind_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False, mask='land_and_ice_mask',
+                  give_back=False, deseasonalize=True, cumsum_map=False )
 
 
+showCombinedCorrelationMap_2D_v3(members='all',
+                  data=None, datafn='EXFuwind', datavar='EXFuwind', datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
+                  detrend=True, window=window, title='Cumulative Zonal Wind', ymax=None, save=True, savefn='EXFuwind_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False, mask='land_and_ice_mask',
+                  give_back=False, deseasonalize=True, cumsum_map=True)
+    
+showCombinedCorrelationMap_2D_v3(members='all',
+                  data=None, datafn='EXFvwind', datavar='EXFvwind', datakind='maps',
+                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
+                  detrend=True, window=window, title='Cumulative Meridional Wind', ymax=None, save=True, savefn='EXFvwind_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False, mask='land_and_ice_mask',
+                  give_back=False, deseasonalize=True, cumsum_map=True)
+
+
+#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS
+#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS
+#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS
+#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS
+#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUS#%%----BONUSv
+
+# window=60
+# showCombinedCorrelationMap_2D_v3(members=[0,10],
+#                   data=None, datafn='UVEL_averaged_-50to0', datavar='UVEL', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                   detrend=True, window=window, title='2D Correlation Map of Average Surface Current (top 50m) vs Dotson to Cosgrove Melt', ymax=-70, save=True, savefn='surface_VEL_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True)
+
+
+# showCombinedCorrelationMap_2D_v3(members=[0,10],
+#                   data=None, datafn='UVEL_averaged_-50to0', datavar='UVEL', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='amundsen_shelf_break_uwind_avg', lags=range(-24, 24),
+#                   detrend=True, window=window, title='2D Correlation Map of Average Surface Current (top 50m) vs Amundsen Shelf Break Uwind', ymax=-70, save=True, savefn='surface_VEL_amundsen_shelf_break_uwind_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True)
 
 
 

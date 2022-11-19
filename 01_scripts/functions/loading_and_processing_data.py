@@ -137,7 +137,17 @@ def loadPACEData(var='PSL', members='all'):
             b=xr.open_dataset('/data/oceans_input/raw_input_data/CESM/PPACE/monthly/'+var+'/b.e11.BRCP85LENS.f09_g16.SST.restoring.ens'+str(i+1).zfill(2)+'.pop.h.SST.200601-201312.nc')[var]
             a=xr.concat([a,b], dim='time')
             a=a.to_dataset()
-            
+        
+        elif var=='aice':
+            if (i+1)<11: #PACE is very inconsistent.....
+                a=xr.open_dataset('/data/oceans_input/raw_input_data/CESM/PPACE/monthly/AICE/b.e11.B20TRLENS.f09_g16.SST.restoring.ens'+str(i+1).zfill(2)+'.cice.h.aice_sh.192001-200512.nc')[var]
+                b=xr.open_dataset('/data/oceans_input/raw_input_data/CESM/PPACE/monthly/AICE/b.e11.BRCP85LENS.f09_g16.SST.restoring.ens'+str(i+1).zfill(2)+'.cice.h.aice_sh.200601-201312.nc')[var]
+            else:
+                a=xr.open_dataset('/data/oceans_input/raw_input_data/CESM/PPACE/monthly/AICE/b.e11.B20TRLENS.f09_g16.SST.restoring.ens'+str(i+1).zfill(2)+'.cice.h.aice.192001-200512.nc')[var]
+                b=xr.open_dataset('/data/oceans_input/raw_input_data/CESM/PPACE/monthly/AICE/b.e11.BRCP85LENS.f09_g16.SST.restoring.ens'+str(i+1).zfill(2)+'.cice.h.aice.200601-201312.nc')[var]
+                
+            a=xr.concat([a,b], dim='time')
+            a=a.to_dataset()
         else:
             print('Not coded yet...')
     

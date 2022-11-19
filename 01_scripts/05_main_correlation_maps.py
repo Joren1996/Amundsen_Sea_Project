@@ -20,13 +20,13 @@ window=60
 #window=12
 
 #HEAT ADVECTION
-correlationMap_2D_v3(members='all',
-                  data=None, datafn='ADVx_TH_corrected_bottom100m_averaged', datavar='ADVx_TH', datakind='maps',
-                  ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
-                  detrend=True, window=window, title='Correlation Map of Heat Advection in Bottom 100m vs Dotson to Cosgrove Melt', ymax=-70, save=True, savefn='bottom100m_ADV_TH_dotson_to_cosgrove_'+str(window)+'month_dt',
-                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
-                  inverse=False,
-                  give_back=False, deseasonalize=False)
+# correlationMap_2D_v3(members='all',
+#                   data=None, datafn='ADVx_TH_corrected_bottom100m_averaged', datavar='ADVx_TH', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                   detrend=True, window=window, title='Correlation Map of Heat Advection in Bottom 100m vs Dotson to Cosgrove Melt', ymax=-70, save=True, savefn='bottom100m_ADV_TH_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=False)
 
 #SALINITY (0-200m)
 # correlationMap_1D_v3(members='all',
@@ -38,7 +38,18 @@ correlationMap_2D_v3(members='all',
 #                   inverse=False,
 #                   give_back=False, deseasonalize=True, cumsum_map=False)
 
-#Surface Freshwater Flux
+# #THETA (0-200m)
+# correlationMap_1D_v3(members=[0,10],
+#                   data=None, datafn='THETA_averaged_-200to0', datavar='THETA', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                   detrend=True, window=window, title='Correlation map of Average Temperature (-200 to 0m) vs Dotson to Cosgrove Massloss', ymax=None, save=True, 
+#                   savefn='THETA-200to0_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True, cumsum_map=False)
+
+
+# #Surface Freshwater Flux
 # correlationMap_1D_v3(members='all',
 #                   data=None, datafn='oceFWflx', datavar='oceFWflx', datakind='maps',
 #                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
@@ -47,7 +58,7 @@ correlationMap_2D_v3(members='all',
 #                   inverse=False,
 #                   give_back=False, deseasonalize=True, cumsum_map=False)
 
-#Zonal Wind
+# #Zonal Wind
 # correlationMap_1D_v3(members='all',
 #                   data=None, datafn='EXFuwind', datavar='EXFuwind', datakind='maps',
 #                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 1),
@@ -103,6 +114,63 @@ correlationMap_2D_v3(members='all',
 #                   inverse=False,
 #                   give_back=False, deseasonalize=True)
 
+
+
+#---WIND-STRESS---------------------------------------------------------------------------------------------
+
+# # Zonal Wind Stress
+# dataU=loadMITgcmData(filename='EXFuwind', members='all', kind='maps')
+# dataV=loadMITgcmData(filename='EXFvwind', members='all', kind='maps')
+
+# #Values derived from Holland et al., 2019
+# rho_a = 1.3 #kg m−3
+# c_a = 0.001 #air drag coefficient
+
+# windnorm=np.sqrt(dataU['EXFuwind']**2+dataV['EXFvwind']**2)
+
+# uTauWind=c_a*rho_a*windnorm*dataU['EXFuwind']
+# vTauWind=c_a*rho_a*windnorm*dataV['EXFvwind']
+
+# #Zonal Wind Stress
+# correlationMap_1D_v3(members='all',
+#                   data=uTauWind.to_dataset(name='uTauWind'), datafn='uTauWind', datavar='uTauWind', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 1),
+#                   detrend=True, window=window, title='Correlation map of Zonal Wind Stress vs Dotson to Cosgrove Mass Loss', ymax=None, save=True, savefn='uTauWind_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True, cumsum_map=False)
+
+# #Meridional Wind Stress
+# correlationMap_1D_v3(members='all',
+#                   data=vTauWind.to_dataset(name='vTauWind'), datafn='vTauWind', datavar='vTauWind', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 1),
+#                   detrend=True, window=window, title='Correlation map of Meridional Wind Stress vs Dotson to Cosgrove Mass Loss', ymax=None, save=True, savefn='vTauWind_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True, cumsum_map=False)
+
+# #Take derivative (correct for meters, simple forward difference...)
+# R=6371000 #[m]; Radius Earth
+# dudy=uTauWind.diff('YC')/(2*np.pi*R/360*dataU['YC'].diff('YC'))
+# dvdx=vTauWind.diff('XC')/(2*np.pi*R*np.cos(np.deg2rad(dataV['YC']))*dataV['XC'].diff('XC')/360)
+# curlTauWind=dvdx-dudy
+
+# #Wind Stress Curl
+# correlationMap_1D_v3(members='all',
+#                   data=curlTauWind.to_dataset(name='curlTauWind'), datafn='curlTauWind', datavar='curlTauWind', datakind='maps',
+#                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 1),
+#                   detrend=True, window=window, title='Correlation map of Wind Stress Curl vs Dotson to Cosgrove Mass Loss', ymax=None, save=True, savefn='curlTauWind_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True, cumsum_map=False)
+#------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
 #BAROCLINIC-FLOW---------------------------------------------------------------------------------------------
 # for ens in range(1, 21):
 #     members=[ens-1,ens]
@@ -135,12 +203,12 @@ correlationMap_2D_v3(members='all',
 
 
 #FAR-FIELD-FORCING------------------------------------------------------------------------------------------------
-# window=60
+#window=60
 # correlationMapPACE(members='all',
 #                    data=None, datavar='PSL',
 #                    ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
 #                    years=['1920', '2013'],
-#                    detrend=True, deseasonalize=True, window=window, title='Correlation Map of Surface Air Pressure vs Amundsen Shelf Break Zonal Wind', ymax=-70, 
+#                    detrend=True, deseasonalize=True, window=window, title='Correlation Map of Surface Air Pressure vs Dotson to Cosgrove Mass Loss', ymax=-70, 
 #                    save=True, savefn='PACE_PSL_dotson_to_cosgrove_massloss_'+str(window)+'month_dt',
 #                    draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
 #                    inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False)
@@ -149,7 +217,7 @@ correlationMap_2D_v3(members='all',
 #                    data=None, datavar='SST',
 #                    ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
 #                    years=['1920', '2013'],
-#                    detrend=True, deseasonalize=True, window=window, title='Correlation Map of Sea Surface Temperature vs Amundsen Shelf Break Zonal Wind', ymax=-70, 
+#                    detrend=True, deseasonalize=True, window=window, title='Correlation Map of Sea Surface Temperature vs Dotson to Cosgrove Mass Loss', ymax=-70, 
 #                    save=True, savefn='PACE_SST_dotson_to_cosgrove_massloss_'+str(window)+'month_dt',
 #                    draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
 #                    inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False)
@@ -172,7 +240,81 @@ correlationMap_2D_v3(members='all',
 #                    save=True, savefn='PACE_SST_amundsen_shelf_break_uwind_'+str(window)+'month_dt',
 #                    draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
 #                    inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False)
+
+# window=60
+# correlationMapPACE(members=[10,20],
+#                    data=None, datavar='aice',
+#                    ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                    years=['1920', '2013'],
+#                    detrend=True, deseasonalize=True, window=window, title='Correlation Map of Sea Ice Area vs Dotson to Cosgrove Mass Loss', ymax=-70, 
+#                    save=True, savefn='PACE_AICE_dotson_to_cosgrove_massloss_'+str(window)+'month_dt',
+#                    draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                    inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False)
+
+# correlationMapPACE(members=[10,20],
+#                    data=None, datavar='aice',
+#                    ind=None, indfn='timeseries_final', indvar='amundsen_shelf_break_uwind_avg', lags=range(-24, 24),
+#                    years=['1920', '2013'],
+#                    detrend=True, deseasonalize=True, window=window, title='Correlation Map of Sea Ice Area vs Amundsen Shelf Break Zonal Wind', ymax=-70, 
+#                    save=True, savefn='PACE_aice_amundsen_shelf_break_uwind_'+str(window)+'month_dt',
+#                    draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                    inverse=False, save_results=True, give_back=False, cumsum_map=False, cumsum_ind=False)
+
 #------------------------------------------------------------------------------------------------------------
+
+
+
+
+#----GEO-----------------------------------------------------------------------------------------------------
+for mem in [4,6,10,11,12]:
+    members=[mem-1,mem]
+    
+#     #Salt 200-700m
+#     correlationMap_1D_v3(members=members,
+#                   data=None, datafn='GEO_SALT_averaged_-700to-200', datavar='SALT', datakind='maps',
+#                   ind=None, indfn='timeseries_full', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                   detrend=True, window=window, title='Correlation map of Average Salinity (200-700m) vs Dotson to Cosgrove Massloss for New Runs', ymax=None, save=True, savefn='GEO_SALT200to700_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True, cumsum_map=False)
+    
+#     #Bottom 100m Velocity
+#     correlationMap_2D_v3(members=members,
+#                       data=None, datafn='GEO_UVEL_bottom100m_averaged', datavar='UVEL', datakind='maps',
+#                       ind=None, indfn='timeseries_full', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                       detrend=True, window=window, title='Correlation Map of Average Bottom Current (lowest 100m) vs Dotson to Cosgrove Melt for New Runs', ymax=-70, save=True, savefn='GEO_VEL_bottom100m_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                       draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                       inverse=False,
+#                       give_back=False, deseasonalize=True)
+
+    #Salt 0-200m
+#     correlationMap_1D_v3(members=members,
+#                   data=None, datafn='GEO_SALT_averaged_-200to0', datavar='SALT', datakind='maps',
+#                   ind=None, indfn='timeseries_full', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                   detrend=True, window=window, title='Correlation map of Average Salinity (0-200m) vs Dotson to Cosgrove Massloss for New Runs', ymax=None, save=True, savefn='GEO_SALT0-200_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                   inverse=False,
+#                   give_back=False, deseasonalize=True, cumsum_map=False)
+
+    #oceFWflx
+    correlationMap_1D_v3(members=members,
+                  data=None, datafn='GEO_oceFWflx', datavar='oceFWflx', datakind='maps',
+                  ind=None, indfn='timeseries_full', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+                  detrend=True, window=window, title='Correlation map of Surface Freshwater Flux vs Dotson to Cosgrove Massloss for New Runs', ymax=None, save=True, savefn='GEO_oceFWflx_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+                  inverse=False,
+                  give_back=False, deseasonalize=True, cumsum_map=False)
+    
+#     #Bottom 100m ADVx_TH
+#     correlationMap_2D_v3(members=members,
+#                       data=None, datafn='GEO_ADVx_TH_corrected_new_bottom100m_averaged', datavar='ADVx_TH', datakind='maps',
+#                       ind=None, indfn='timeseries_full', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
+#                       detrend=True, window=window, title='Correlation Map of Heat Advection (lowest 100m) vs Dotson to Cosgrove Melt for New Runs', ymax=-70, save=True, savefn='GEO_ADV_bottom100m_dotson_to_cosgrove_'+str(window)+'month_dt',
+#                       draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
+#                       inverse=False,
+#                       give_back=False, deseasonalize=True)
+
+#---------------------------------------------------------------------------------------------------------
 
 
 

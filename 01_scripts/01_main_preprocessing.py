@@ -78,6 +78,13 @@ Reading MAPS:
 # var='ADVx_TH' #The next code reads both the x and y component of the advection, and it also reads both depth averaged and bottom 100 m.
 # # #01-READ DEPTH INTEGRATED AND BOTTOM ADVECTION
 # readMITgcmData_advection(var_name=var, members=members, bd='/data/oceans_output/shelf/kaight/mitgcm',  gp='/data/oceans_output/shelf/kaight/mitgcm/PAS_grid/')
+
+#For GEO
+# var='ADVx_TH'
+# for mem in [4,6,10,11,12]:
+#     members=[mem-1,mem]
+#     readMITgcmData_advection(var_name=var, members=members, bd='/data/oceans_output/shelf/grejan/archer2_mitgcm_GEO/',  gp='/data/oceans_output/shelf/kaight/mitgcm/PAS_grid/', GEO=True)
+
 #----------------------------------------------------------------
 
 # makeEverythingSmaller(path='/data/hpcdata/users/grejan/mitgcm/02_data/maps/', newtype=np.float32, kind='all')
@@ -92,8 +99,7 @@ Maps for New Geometry
 
 
 #---SHIfwFlx--------------------------------------------
-
-#for mem in [4,6,10,11,12]:
+# for mem in [4,6,10,11,12]:
 #     members=[mem-1,mem]
 #     var='SHIfwFlx'
 #     #READ Shelf FW flx
@@ -116,6 +122,28 @@ Maps for New Geometry
 #     data=readMITgcmData_depth(var, method='average', members=members, z0=[-700, -200], bottom=False, zbottom=100, save=True, output=False)
 #----------------------------------------------------------
 
+#---Salinity (0-200m)----------------------------------------
+# for mem in [4,6,10,11,12]:
+#     members=[mem-1,mem]
+#     var='SALT'
+#     data=readGEOData_depth(var, method='average', members=members, z0=[-200, 0], bottom=False, zbottom=100, save=True, output=False)
+#     data=readMITgcmData_depth(var, method='average', members=members, z0=[-200, 0], bottom=False, zbottom=100, save=True, output=False)
+# #----------------------------------------------------------
+
+# #---SHIfwFlx--------------------------------------------
+# for mem in [4,6,10,11,12]:
+#     members=[mem-1,mem]
+#     var='oceFWflx'
+#     #READ oce FW flx
+#     data=readGEOData(var, bd='/data/oceans_output/shelf/grejan/archer2_mitgcm_GEO', members=members, save=True, filename=None)
+# #----------------------------------------------------------
+
+# #---Surface Theta-----------------------------------------------------
+# var='THETA'
+# readMITgcmData_depth(var, bd='/data/oceans_output/shelf/kaight/mitgcm', method='average', members='all', 
+#                      z0=[-200, 0], bottom=False, zbottom=100, save=True, output=False)
+#----------------------------------------------------------------
+
 #---BOTTOM-100M-VELOCITY----------------------------------------    
 # for mem in [4,6,10,11,12]:
 #     members=[mem-1,mem]
@@ -126,7 +154,8 @@ Maps for New Geometry
 #     readGEOData_depth(var, bd='/data/oceans_output/shelf/grejan/archer2_mitgcm_GEO', method='average', members=members, z0=None, bottom=True, zbottom=100, save=True, output=False, gtype='v')
 
 
-
+makeEverythingSmaller(path='/data/hpcdata/users/grejan/mitgcm/02_data/maps/', newtype=np.float32, kind='GEO')
+makeEverythingSmaller(path='/data/hpcdata/users/grejan/mitgcm/02_data/maps/', newtype=np.float32, kind='THETA')
 
 
 #02-SLICES-----------------------------------------------------------------------------------
@@ -149,11 +178,13 @@ Reading Slices:
 #----U, THETA, and SALT for 72.5S------------------------------------------------------------
 
 # members='all'
-# var='THETA'
-# readMITgcmData_Slice(var, bd='/data/oceans_output/shelf/kaight/mitgcm', members=members, method='lat', x=115, y=-72.5)
+# makeEverythingSmaller(path='/data/hpcdata/users/grejan/mitgcm/02_data/slices/', newtype=np.float32, kind='all')
 # var='SALT'
 # readMITgcmData_Slice(var, bd='/data/oceans_output/shelf/kaight/mitgcm', members=members, method='lat', x=115, y=-72.5)
 # var='VVEL'
+# readMITgcmData_Slice(var, bd='/data/oceans_output/shelf/kaight/mitgcm', members=members, method='lat', x=115, y=-72.5)
+# makeEverythingSmaller(path='/data/hpcdata/users/grejan/mitgcm/02_data/slices/', newtype=np.float32, kind='all')
+# var='THETA'
 # readMITgcmData_Slice(var, bd='/data/oceans_output/shelf/kaight/mitgcm', members=members, method='lat', x=115, y=-72.5)
 
 # for mem in [4,6,10,11,12]:
@@ -161,10 +192,10 @@ Reading Slices:
 #     var='THETA'
 #     readGEOData_Slice(var, members=members, method='lat', x=115, y=-72.5)
 #     var='SALT'
-#     readMITgcmData_Slice(var, members=members, method='lat', x=115, y=-72.5)
+#     readGEOData_Slice(var, members=members, method='lat', x=115, y=-72.5)
 #     var='VVEL'
-#     readMITgcmData_Slice(var, members=members, method='lat', x=115, y=-72.5)
-    
+#     readGEOData_Slice(var, members=members, method='lat', x=115, y=-72.5)
+
 #----------------------------------------------------------------
 
 # makeEverythingSmaller(path='/data/hpcdata/users/grejan/mitgcm/02_data/slices/', newtype=np.float32, kind='all')
@@ -204,7 +235,7 @@ Time series used for analysis: most are just taken from Naughten et al. Here,
 
 # segment_dir=[i for i in os.listdir('/data/oceans_output/shelf/grejan/archer2_mitgcm_GEO/PAS_06_GEO/output') if (i[0]=='1') | (i[0]=='2')]
 # segment_dir=[i for i in segment_dir if (int(i[:4])>=1920)]
-# segment_dir=[i for i in segment_dir if (int(i[:4])<=1995)]
+# #segment_dir=[i for i in segment_dir if (int(i[:4])<=1995)]
 # print(segment_dir)
 # for i in [4,6,10,11,12]:
 #     print('Start with member: '+str(i))
