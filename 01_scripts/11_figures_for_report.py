@@ -26,7 +26,7 @@ window=60
 showCombinedCorrelationMap_2D_v3(members='all',
                       data=None, datafn='ADVx_TH_corrected_bottom100m_averaged', datavar='ADVx_TH', datakind='old',
                       ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
-                      detrend=True, window=window, title='Correlation between the Average Bottom Heat Advection (lowest 100m) \n and Dotson to Cosgrove Mass Loss', ymax=-70, save=True, savefn='bottom100m_ADV_TH_dotson_to_cosgrove_'+str(window)+'month_dt',
+                      detrend=True, window=window, title='Correlation between the Average Horizontal Heat Advection (lowest 100m) \n and Dotson to Cosgrove Mass Loss', ymax=-70, save=True, savefn='bottom100m_ADV_TH_dotson_to_cosgrove_'+str(window)+'month_dt',
                       draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
                       inverse=False, deseasonalize=False,
                       give_back=False)
@@ -37,7 +37,7 @@ window=60
 showCombinedCorrelationMap_2D_v3(members='all',
                   data=None, datafn='bottom100m_averaged_UVEL', datavar='UVEL', datakind='old',
                   ind=None, indfn='timeseries_final', indvar='amundsen_shelf_break_uwind_avg', lags=range(-24, 24),
-                  detrend=True, window=window, title='Correlation between the Average Bottom Current (lowest 100m) \n and Amundsen Shelf Break Uwind', ymax=-70, save=True, savefn='bottom100m_VEL_amundsen_shelf_break_uwind_'+str(window)+'month_dt',
+                  detrend=True, window=window, title='Correlation between the Average Bottom Current (lowest 100m) \n and Amundsen Shelf Break Zonal Wind', ymax=-70, save=True, savefn='bottom100m_VEL_amundsen_shelf_break_uwind_'+str(window)+'month_dt',
                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
                   inverse=False, 
                   give_back=False, deseasonalize=False)
@@ -49,7 +49,7 @@ window=60
 showCombinedCorrelationMap_2D_v3(members='all',
                   data=None, datafn='SALT_averaged_-200to0', datavar='SALT', datakind='maps',
                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 24),
-                  detrend=True, window=window, title='Correlation between Average Salinity (-200 to 0m) \n and Dotson to Cosgrove Massloss', ymax=-70, save=True, 
+                  detrend=True, window=window, title='Correlation between Average Salinity (-200 to 0m) \n and Dotson to Cosgrove Mass Loss', ymax=-70, save=True, 
                   savefn='SALT-200to0_dotson_to_cosgrove_'+str(window)+'month_dt',
                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
                   inverse=False, mask='land_and_ice_mask',
@@ -79,7 +79,7 @@ window=60
 showCombinedCorrelationMap_2D_v3(members='all',
                   data=None, datafn='EXFuwind', datavar='EXFuwind', datakind='maps',
                   ind=None, indfn='timeseries_final', indvar='dotson_to_cosgrove_massloss', lags=range(-24, 0),
-                  detrend=True, window=window, title='Correlation of Zonal Wind with Ice Shelf Basal Mass Loss (Dotson to Cosgrove)', ymax=None, save=True, savefn='EXFvwind_dotson_to_cosgrove_'+str(window)+'month_dt',
+                  detrend=True, window=window, title='Zonal Wind', ymax=None, save=True, savefn='EXFuwind_dotson_to_cosgrove_'+str(window)+'month_dt',
                   draw_box=False, box_x=[360-115, 360-102],box_y=[-71.8, -70.2],
                   inverse=False, mask='land_and_ice_mask',
                   give_back=False, deseasonalize=True, cumsum_map=False )

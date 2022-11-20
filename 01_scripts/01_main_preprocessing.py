@@ -154,8 +154,8 @@ Maps for New Geometry
 #     readGEOData_depth(var, bd='/data/oceans_output/shelf/grejan/archer2_mitgcm_GEO', method='average', members=members, z0=None, bottom=True, zbottom=100, save=True, output=False, gtype='v')
 
 
-makeEverythingSmaller(path='/data/hpcdata/users/grejan/mitgcm/02_data/maps/', newtype=np.float32, kind='GEO')
-makeEverythingSmaller(path='/data/hpcdata/users/grejan/mitgcm/02_data/maps/', newtype=np.float32, kind='THETA')
+# makeEverythingSmaller(path='/data/hpcdata/users/grejan/mitgcm/02_data/maps/', newtype=np.float32, kind='GEO')
+# makeEverythingSmaller(path='/data/hpcdata/users/grejan/mitgcm/02_data/maps/', newtype=np.float32, kind='THETA')
 
 
 #02-SLICES-----------------------------------------------------------------------------------
@@ -227,7 +227,7 @@ Time series used for analysis: most are just taken from Naughten et al. Here,
 #     print('Finished with member: '+str(i))
 # print('Finished with *EVERYTHING*!')
 
-#----NEW GEOMETRY-------------------------------------------------
+# #----NEW GEOMETRY-------------------------------------------------
 # import sys
 # import os
 # sys.path.append('/data/hpcdata/users/grejan/mitgcm/') #Make sure we can also import Kaitlins code.
@@ -239,7 +239,7 @@ Time series used for analysis: most are just taken from Naughten et al. Here,
 # print(segment_dir)
 # for i in [4,6,10,11,12]:
 #     print('Start with member: '+str(i))
-#     precompute_timeseries_coupled (output_dir='/data/oceans_output/shelf/grejan/archer2_mitgcm_GEO/PAS_{}_GEO/output'.format(str(i).zfill(2)), timeseries_file='/data/hpcdata/users/grejan/mitgcm/02_data/timeseries/timeseries_full_GEO{}.nc'.format(str(i).zfill(2)), 
+#     precompute_timeseries_coupled (output_dir='/data/oceans_output/shelf/grejan/archer2_mitgcm_GEO/PAS_{}_GEO/output'.format(str(i).zfill(2)), timeseries_file='/data/hpcdata/users/grejan/mitgcm/02_data/timeseries/timeseries_full_GEO_test{}.nc'.format(str(i).zfill(2)), 
 #                                    hovmoller_file='hovmoller.nc', file_name='output.nc', segment_dir=segment_dir, timeseries_types=['amundsen_shelf_break_uwind_avg', 'all_massloss', 'dotson_to_cosgrove_massloss', 'dotson_massloss', 'pig_massloss', 'thwaites_massloss', 'cosgrove_massloss', 'crosson_massloss', 'amundsen_shelf_ohc_below_0m', 'amundsen_shelf_temp_btw_200_700m', 'amundsen_shelf_salt_below_0m', 'all_melting', 'dotson_to_cosgrove_melting', 'dotson_melting', 'pig_melting', 'thwaites_melting', 'cosgrove_melting', 'crosson_melting', 'amundsen_shelf_seaice_melt', 'amundsen_shelf_seaice_freeze'], 
 #                                    hovmoller_loc=[], key='PAS', time_average=False)
 
@@ -253,7 +253,24 @@ Time series used for analysis: most are just taken from Naughten et al. Here,
 #--------BONUS----------------------------#--------BONUS----------------------------#--------BONUS----------------------------
 #--------BONUS----------------------------#--------BONUS----------------------------#--------BONUS----------------------------
 
+#----TEST GEOMETRY-------------------------------------------------
+import sys
+import os
+sys.path.append('/data/hpcdata/users/grejan/mitgcm/') #Make sure we can also import Kaitlins code.
+from mitgcm_python_master.postprocess import precompute_timeseries_coupled
 
+segment_dir=[i for i in os.listdir('/data/oceans_output/shelf/grejan/archer2_mitgcm_GEO/PAS_06_GEO/output') if (i[0]=='1') | (i[0]=='2')]
+segment_dir=[i for i in segment_dir if (int(i[:4])>=1920)]
+#segment_dir=[i for i in segment_dir if (int(i[:4])<=1995)]
+print(segment_dir)
+for i in [4,6,10,11,12]:
+    print('Start with member: '+str(i))
+    precompute_timeseries_coupled (output_dir='/data/oceans_output/shelf/grejan/archer2_mitgcm_GEO/PAS_{}_GEO/output'.format(str(i).zfill(2)), timeseries_file='/data/hpcdata/users/grejan/mitgcm/02_data/timeseries/timeseries_full_GEO_test{}.nc'.format(str(i).zfill(2)), 
+                                   hovmoller_file='hovmoller.nc', file_name='output.nc', segment_dir=segment_dir, timeseries_types=['all_massloss', 'dotson_to_cosgrove_massloss', 'dotson_massloss', 'pig_massloss', 'thwaites_massloss', 'cosgrove_massloss', 'crosson_massloss', 'all_melting', 'dotson_to_cosgrove_melting', 'dotson_melting', 'pig_melting', 'thwaites_melting', 'cosgrove_melting', 'crosson_melting'], 
+                                   hovmoller_loc=[], key='PAS', time_average=False)
+
+    print('Finished with member: '+str(i))
+print('Finished with *EVERYTHING*!') 
 
 
 

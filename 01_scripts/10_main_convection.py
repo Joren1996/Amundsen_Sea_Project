@@ -54,4 +54,4 @@ from functions.convection import convectionCorMap, showConvectionCorMap, createC
 #                   give_back=False, deseasonalize=True, cumsum_map=False)
 
 #--------------------------Create Final Map for in the report.--------------------------
-#createConvectionMaps(save=True)
+createConvectionMaps(save=True)
